@@ -1,0 +1,18 @@
+{
+  "name": "Nova Finanzas AI",
+  "short_name": "Nova",
+  "description": "Tu centro de control financiero personal con inteligencia artificial.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#4a7fd6",
+  "theme_color": "#4a7fd6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

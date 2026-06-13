@@ -1,0 +1,83 @@
+import type { LucideIcon } from 'lucide-react'
+import {
+  Banknote,
+  CreditCard,
+  PiggyBank,
+  TrendingUp,
+  HandCoins,
+  UtensilsCrossed,
+  Fuel,
+  ShoppingCart,
+  Tv,
+  Wallet,
+  Wifi,
+  Zap,
+  Droplets,
+  Target,
+  Home,
+  Plane,
+  Smartphone,
+  Car,
+  Heart,
+  GraduationCap,
+  Gift,
+  Coffee,
+  Dumbbell,
+  Stethoscope,
+  Shirt,
+  Receipt,
+  Phone,
+  Bus,
+  ArrowDownLeft,
+  ArrowLeftRight,
+  Landmark,
+  Briefcase,
+  Building2,
+  CircleDollarSign,
+} from 'lucide-react'
+
+/**
+ * Central registry mapping serializable string keys -> Lucide icon components.
+ * Domain data stores only the string key; components resolve the component
+ * with `getIcon(key)`. This keeps all persisted data JSON-serializable.
+ */
+export const iconRegistry: Record<string, LucideIcon> = {
+  banknote: Banknote,
+  'credit-card': CreditCard,
+  'piggy-bank': PiggyBank,
+  'trending-up': TrendingUp,
+  'hand-coins': HandCoins,
+  utensils: UtensilsCrossed,
+  fuel: Fuel,
+  'shopping-cart': ShoppingCart,
+  tv: Tv,
+  wallet: Wallet,
+  wifi: Wifi,
+  zap: Zap,
+  droplets: Droplets,
+  target: Target,
+  home: Home,
+  plane: Plane,
+  smartphone: Smartphone,
+  car: Car,
+  heart: Heart,
+  'graduation-cap': GraduationCap,
+  gift: Gift,
+  coffee: Coffee,
+  dumbbell: Dumbbell,
+  stethoscope: Stethoscope,
+  shirt: Shirt,
+  receipt: Receipt,
+  phone: Phone,
+  bus: Bus,
+  'arrow-down-left': ArrowDownLeft,
+  'arrow-left-right': ArrowLeftRight,
+  landmark: Landmark,
+  briefcase: Briefcase,
+  building: Building2,
+  dollar: CircleDollarSign,
+}
+
+export function getIcon(key: string): LucideIcon {
+  return iconRegistry[key] ?? Wallet
+}
