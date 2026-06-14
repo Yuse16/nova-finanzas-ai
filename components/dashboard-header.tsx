@@ -1,4 +1,3 @@
-javascript
 'use client'
 
 import { Bell, Layers } from 'lucide-react'

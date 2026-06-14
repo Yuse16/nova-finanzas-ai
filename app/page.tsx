@@ -1,4 +1,3 @@
-javascript
 'use client'
 
 import { useState } from 'react'
@@ -24,7 +23,7 @@ import { SectionHeader } from '@/components/section-header'
 import { Onboarding } from '@/components/onboarding'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
-import { useEffect, useRef } from 'react' // Importar useRef y useEffect
+import { useEffect, useRef } from 'react'
 
 // Import all global modals
 import { TransactionModal } from '@/components/transaction-modal'
@@ -33,14 +32,14 @@ import { QuickActionsModal } from '@/components/quick-actions-modal'
 import { AccountModal } from '@/components/account-modal'
 import { GoalModal } from '@/components/goal-modal'
 import { ReminderModal } from '@/components/reminder-modal'
-import { MoreOptionsModal } from '@/components/more-options-modal' // NEW IMPORT
-import { AllMovementsModal } from '@/components/all-movements-modal'; // NEW IMPORT
-import { AssistantHistoryModal } from '@/components/assistant-history-modal'; // NEW IMPORT
-import { SettingsModal } from '@/components/settings-modal'; // NEW IMPORT
+import { MoreOptionsModal } from '@/components/more-options-modal'
+import { AllMovementsModal } from '@/components/all-movements-modal';
+import { AssistantHistoryModal } from '@/components/assistant-history-modal';
+import { SettingsModal } from '@/components/settings-modal';
 import { SearchModal } from '@/components/search-modal'
 import { FiltersModal } from '@/components/filters-modal'
-import { FontProvider } from '@/components/font-provider' // NUEVA IMPORTACIÓN
-import { NotificationsModal } from '@/components/notifications-modal'; // NUEVA IMPORTACIÓN
+import { FontProvider } from '@/components/font-provider'
+import { NotificationsModal } from '@/components/notifications-modal';
 
 export default function Page() {
   const { data, ready } = useStore()
@@ -74,97 +73,96 @@ export default function Page() {
   }
 
   return (
-    <FontProvider> {/* ENVOLVER CON FONTPROVIDER */}
-    <div className="relative min-h-screen overflow-x-hidden">
-      {/* Atmospheric background */}
-      <div className="fixed inset-0 -z-10">
-        <Image
-          src="/bg-atmosphere.png"
-          alt=""
-          fill
-          priority
-          aria-hidden
-          className="object-cover"
+    <FontProvider>
+      <div className="relative min-h-screen overflow-x-hidden">
+        {/* Atmospheric background */}
+        <div className="fixed inset-0 -z-10">
+          <Image
+            src="/bg-atmosphere.png"
+            alt=""
+            fill
+            priority
+            aria-hidden
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-[oklch(0.55_0.13_255/35%)]" />
+        </div>
+
+        <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-5 pb-40 pt-6">
+          <DashboardHeader />
+          <div ref={homeRef}>
+            <QuickStats />
+          </div>
+          <SpendingChart />
+
+          <section className="flex flex-col gap-3">
+            <SectionHeader title="Acciones rápidas" />
+            <QuickActions onVoice={openVoice} />
+          </section>
+
+          <div ref={accountsRef}>
+            <AccountsModule />
+          </div>
+          <div ref={movementsRef}>
+            <MovementsModule />
+          </div>
+          <AiAssistant />
+          <SmartInsights />
+          <GoalsModule />
+          <HealthScore />
+          <PovertyZero />
+          <RemindersModule />
+
+          {/* Voice trigger bar */}
+          <button
+            type="button"
+            onClick={openVoice}
+            className="glass-strong flex items-center gap-4 rounded-3xl p-4 text-left transition-transform active:scale-[0.98]"
+          >
+            <span className="relative grid size-14 shrink-0 place-items-center rounded-full bg-[oklch(0.62_0.17_290)]">
+              <span
+                className="absolute size-14 rounded-full bg-[oklch(0.7_0.18_290)]"
+                style={{ animation: 'nova-pulse 2.4s ease-out infinite' }}
+              />
+              <Mic className="relative size-6 text-white" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">
+                Registra hablando
+              </span>
+              <span className="block truncate text-sm text-muted-foreground">
+                &ldquo;{voiceExamples[0]}&rdquo; · &ldquo;{voiceExamples[1]}&rdquo;
+              </span>
+            </span>
+          </button>
+        </main>
+
+        {/* Bottom Nav onAdd triggers the Quick Actions Modal instead of voice directly */}
+        <BottomNav
+          onAdd={() => open({ kind: 'quick-actions' })}
+          onNavigate={scrollToSection}
+          homeRef={homeRef}
+          movementsRef={movementsRef}
+          accountsRef={accountsRef}
         />
-        <div className="absolute inset-0 bg-[oklch(0.55_0.13_255/35%)]" />
-      </div>
 
-      <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-5 pb-40 pt-6">
-        <DashboardHeader />
-        <div ref={homeRef}>
-        <QuickStats />
-    </div>
-        <SpendingChart />
-
-        <section className="flex flex-col gap-3">
-          <SectionHeader title="Acciones rápidas" />
-          <QuickActions onVoice={openVoice} />
-        </section>
-
-        <div ref={accountsRef}>
-          <AccountsModule />
-        </div>
-        <div ref={movementsRef}>
-          <MovementsModule />
-        </div>
-        <AiAssistant />
-        <SmartInsights />
-        <GoalsModule />
-        <HealthScore />
-        <PovertyZero />
-        <RemindersModule />
-
-        {/* Voice trigger bar */}
-        <button
-          type="button"
-          onClick={openVoice}
-          className="glass-strong flex items-center gap-4 rounded-3xl p-4 text-left transition-transform active:scale-[0.98]"
-        >
-          <span className="relative grid size-14 shrink-0 place-items-center rounded-full bg-[oklch(0.62_0.17_290)]">
-            <span
-              className="absolute size-14 rounded-full bg-[oklch(0.7_0.18_290)]"
-              style={{ animation: 'nova-pulse 2.4s ease-out infinite' }}
-            />
-            <Mic className="relative size-6 text-white" />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-sm font-semibold">
-              Registra hablando
-            </span>
-            <span className="block truncate text-sm text-muted-foreground">
-              &ldquo;{voiceExamples[0]}&rdquo; · &ldquo;{voiceExamples[1]}&rdquo;
-            </span>
-          </span>
-        </button>
-      </main>
-
-      {/* Bottom Nav onAdd triggers the Quick Actions Modal instead of voice directly */}
-      <BottomNav
-        onAdd={() => open({ kind: 'quick-actions' })}
-        onNavigate={scrollToSection}
-        homeRef={homeRef}
-        movementsRef={movementsRef}
-        accountsRef={accountsRef}
-      />
-
-      {/* Global Modals */}
-      <TransactionModal />
-      <TransferModal />
-      <QuickActionsModal />
-      <AccountModal />
-      <GoalModal />
-      <ReminderModal />
-      <MoreOptionsModal />
+        {/* Global Modals */}
+        <TransactionModal />
+        <TransferModal />
+        <QuickActionsModal />
+        <AccountModal />
+        <GoalModal />
+        <ReminderModal />
+        <MoreOptionsModal />
         <AllMovementsModal />
         <AssistantHistoryModal />
         <SettingsModal />
         <SearchModal />
         <FiltersModal />
-        <NotificationsModal /> {/* NUEVO MODAL */}
+        <NotificationsModal />
 
-      <VoiceExperience open={voiceOpen} onClose={() => setVoiceOpen(false)} />
-    </div>
-    </FontProvider> {/* CERRAR FONTPROVIDER */}
+        <VoiceExperience open={voiceOpen} onClose={() => setVoiceOpen(false)} />
+      </div>
+    </FontProvider>
   )
 }
-
