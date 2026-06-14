@@ -1,15 +1,37 @@
 'use client'
 
 import { Home, ArrowLeftRight, Wallet, Menu, Plus } from 'lucide-react'
+import type { RefObject } from 'react'
+import { useUI } from '@/lib/ui-context' // Import now here
 
 const items = [
-  { label: 'Inicio', icon: Home },
-  { label: 'Movimientos', icon: ArrowLeftRight },
-  { label: 'Cuentas', icon: Wallet },
-  { label: 'Más', icon: Menu },
+  { label: 'Inicio', icon: Home, ref: 'homeRef' },
+  { label: 'Movimientos', icon: ArrowLeftRight, ref: 'movementsRef' },
+  { label: 'Cuentas', icon: Wallet, ref: 'accountsRef' },
+  { label: 'Más', icon: Menu, ref: 'moreOptions' }, // Changed ref to moreOptions for clarity
 ]
 
-export function BottomNav({ onAdd }: { onAdd: () => void }) {
+export function BottomNav({
+  onAdd,
+  onNavigate,
+  homeRef,
+  movementsRef,
+  accountsRef,
+}: {
+  onAdd: () => void
+  onNavigate: (ref: RefObject<HTMLDivElement>) => void
+  homeRef: RefObject<HTMLDivElement>
+  movementsRef: RefObject<HTMLDivElement>
+  accountsRef: RefObject<HTMLDivElement>
+}) {
+  const refMap: Record<string, RefObject<HTMLDivElement>> = {
+    homeRef: homeRef,
+    movementsRef: movementsRef,
+    accountsRef: accountsRef,
+  }
+
+  const { open } = useUI() // Use useUI hook here
+
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[max(env(safe-area-inset-bottom),0.75rem)]">
       <nav className="glass-strong pointer-events-auto relative mx-4 flex w-full max-w-md items-center justify-between rounded-[2rem] px-6 py-3">
@@ -18,6 +40,7 @@ export function BottomNav({ onAdd }: { onAdd: () => void }) {
             <button
               key={it.label}
               type="button"
+              onClick={() => it.ref && refMap[it.ref] && onNavigate(refMap[it.ref])} // Safeguard
               className={`flex flex-col items-center gap-1 text-[11px] ${
                 i === 0 ? 'text-foreground' : 'text-muted-foreground'
               }`}
@@ -46,6 +69,13 @@ export function BottomNav({ onAdd }: { onAdd: () => void }) {
             <button
               key={it.label}
               type="button"
+              onClick={() => {
+                if (it.ref === 'moreOptions') {
+                  open({ kind: 'more-options' })
+                } else if (it.ref && refMap[it.ref]) {
+                  onNavigate(refMap[it.ref])
+                }
+              }}
               className="flex flex-col items-center gap-1 text-[11px] text-muted-foreground"
             >
               <it.icon className="size-5" />
@@ -57,3 +87,4 @@ export function BottomNav({ onAdd }: { onAdd: () => void }) {
     </div>
   )
 }
+

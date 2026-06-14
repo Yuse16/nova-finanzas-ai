@@ -4,7 +4,11 @@ import { useMemo, useState } from 'react'
 import { Search, SlidersHorizontal, ChevronRight } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { GlassCard } from './glass-card'
-import { movements, fmt, type MovementType } from '@/lib/data'
+import { useStore } from '@/lib/store'
+import { useUI } from '@/lib/ui-context'
+import { getIcon } from '@/lib/icons'
+import { fmt, dateGroup } from '@/lib/format'
+import type { Movement, MovementType } from '@/lib/types'
 
 const filters: { label: string; value: 'todos' | MovementType }[] = [
   { label: 'Todos', value: 'todos' },
@@ -14,20 +18,40 @@ const filters: { label: string; value: 'todos' | MovementType }[] = [
   { label: 'Deudas', value: 'deuda' },
 ]
 
-const groupOrder = ['Hoy', 'Ayer', 'Esta semana', 'Este mes'] as const
-
 export function MovementsModule() {
+  const { data } = useStore()
+  const { open } = useUI()
   const [active, setActive] = useState<'todos' | MovementType>('todos')
 
   const grouped = useMemo(() => {
-    const list =
-      active === 'todos'
-        ? movements
-        : movements.filter((m) => m.type === active)
-    return groupOrder
-      .map((g) => ({ group: g, items: list.filter((m) => m.group === g) }))
-      .filter((g) => g.items.length > 0)
-  }, [active])
+    const list = active === 'todos'
+      ? data.movements
+      : data.movements.filter((m) => {
+          if (active === 'deuda') return m.type === 'deuda' || m.type === 'prestamo'
+          return m.type === active
+        })
+
+    // Sort by date descending, then by creation time
+    const sorted = [...list].sort((a, b) => {
+      const dateA = a.date || ''
+      const dateB = b.date || ''
+      if (dateB !== dateA) return dateB.localeCompare(dateA)
+      return b.createdAt - a.createdAt
+    })
+
+    const groups: { group: string; items: Movement[] }[] = []
+    sorted.forEach((m) => {
+      const g = dateGroup(m.date)
+      let groupObj = groups.find((x) => x.group === g)
+      if (!groupObj) {
+        groupObj = { group: g, items: [] }
+        groups.push(groupObj)
+      }
+      groupObj.items.push(m)
+    })
+
+    return groups
+  }, [data.movements, active])
 
   return (
     <GlassCard className="p-5">
@@ -37,6 +61,7 @@ export function MovementsModule() {
           <button
             type="button"
             aria-label="Buscar"
+            onClick={() => open({ kind: 'search' })}
             className="glass-subtle grid size-9 place-items-center rounded-xl active:scale-95 transition-transform"
           >
             <Search className="size-4" />
@@ -44,6 +69,7 @@ export function MovementsModule() {
           <button
             type="button"
             aria-label="Filtros"
+            onClick={() => open({ kind: 'filters' })}
             className="glass-subtle grid size-9 place-items-center rounded-xl active:scale-95 transition-transform"
           >
             <SlidersHorizontal className="size-4" />
@@ -57,11 +83,7 @@ export function MovementsModule() {
             key={f.value}
             type="button"
             onClick={() => setActive(f.value)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              active === f.value
-                ? 'bg-white/85 text-[oklch(0.45_0.1_255)]'
-                : 'glass-subtle text-foreground'
-            }`}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${active === f.value ? 'bg-white/85 text-[oklch(0.45_0.1_255)]' : 'glass-subtle text-foreground'}`}
           >
             {f.label}
           </button>
@@ -83,17 +105,21 @@ export function MovementsModule() {
               </p>
               <ul className="flex flex-col">
                 {section.items.map((m) => {
-                  const positive = m.amount > 0
+                  const Icon = getIcon(m.icon)
+                  const isPositive = m.type === 'ingreso' || m.type === 'deuda'
+                  const sign = isPositive ? '+' : '-'
+
                   return (
                     <li
                       key={m.id}
-                      className="flex items-center gap-3 border-b border-white/10 py-2.5 last:border-0"
+                      onClick={() => open({ kind: 'transaction', editing: m })}
+                      className="flex items-center gap-3 border-b border-white/10 py-2.5 last:border-0 cursor-pointer hover:bg-white/5 transition-colors rounded-xl px-2 -mx-2"
                     >
                       <span
                         className="grid size-9 shrink-0 place-items-center rounded-xl"
                         style={{ background: m.color }}
                       >
-                        <m.icon className="size-4 text-white" />
+                        <Icon className="size-4 text-white" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-medium leading-tight">
@@ -107,12 +133,12 @@ export function MovementsModule() {
                         <span
                           className="block text-sm font-semibold tabular-nums"
                           style={{
-                            color: positive
+                            color: isPositive
                               ? 'var(--positive)'
                               : 'var(--card-foreground)',
                           }}
                         >
-                          {positive ? '+' : ''}
+                          {sign}
                           {fmt(m.amount)}
                         </span>
                         <span className="text-xs text-muted-foreground">
@@ -125,12 +151,18 @@ export function MovementsModule() {
               </ul>
             </motion.div>
           ))}
+          {grouped.length === 0 && (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No hay movimientos registrados.
+            </p>
+          )}
         </AnimatePresence>
       </div>
 
       <button
         type="button"
-        className="mt-4 flex w-full items-center justify-center gap-1 text-sm font-medium text-muted-foreground active:text-foreground"
+        onClick={() => open({ kind: 'all-movements' })} // NEW: Open all movements modal
+        className="mt-4 flex w-full items-center justify-center gap-1 text-sm font-medium text-muted-foreground active:text-foreground hover:text-foreground transition-colors"
       >
         Ver más movimientos <ChevronRight className="size-4" />
       </button>

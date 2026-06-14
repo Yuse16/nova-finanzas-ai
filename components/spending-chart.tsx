@@ -3,7 +3,8 @@
 import { useId } from 'react'
 import { motion } from 'framer-motion'
 import { GlassCard } from './glass-card'
-import { chartData } from '@/lib/data'
+import { useStore } from '@/lib/store'
+import { fmtShort } from '@/lib/format'
 
 const W = 320
 const H = 150
@@ -13,7 +14,7 @@ function buildPaths(data: number[]) {
   const max = Math.max(...data)
   const min = Math.min(...data)
   const range = max - min || 1
-  const stepX = (W - PAD * 2) / (data.length - 1)
+  const stepX = (W - PAD * 2) / (data.length - 1 || 1)
 
   const points = data.map((v, i) => {
     const x = PAD + i * stepX
@@ -40,8 +41,38 @@ function buildPaths(data: number[]) {
 
 export function SpendingChart() {
   const id = useId()
+  const { data } = useStore()
+
+  // Generate spending data for 30 days of the current month
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+
+  const chartData = Array.from({ length: 30 }, (_, index) => {
+    const day = index + 1
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    return data.movements
+      .filter(
+        (m) =>
+          m.type === 'gasto' &&
+          m.date &&
+          m.date.slice(0, 10) === dateStr
+      )
+      .reduce((sum, m) => sum + m.amount, 0)
+  })
+
   const { line, area, points } = buildPaths(chartData)
   const last = points[points.length - 1]
+
+  const maxVal = Math.max(...chartData, 0)
+  const limit = maxVal > 0 ? maxVal : 1200
+  const yLabels = [
+    limit,
+    limit * 0.75,
+    limit * 0.5,
+    limit * 0.25,
+    0,
+  ]
 
   return (
     <GlassCard
@@ -56,12 +87,10 @@ export function SpendingChart() {
       </div>
 
       <div className="mt-4 flex gap-2">
-        <div className="flex flex-col justify-between py-1 text-[10px] text-muted-foreground tabular-nums">
-          <span>$1,200</span>
-          <span>$900</span>
-          <span>$600</span>
-          <span>$300</span>
-          <span>$0</span>
+        <div className="flex flex-col justify-between py-1 text-[10px] text-muted-foreground tabular-nums min-w-[48px] text-right pr-1">
+          {yLabels.map((val, idx) => (
+            <span key={idx}>{fmtShort(val)}</span>
+          ))}
         </div>
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -101,7 +130,7 @@ export function SpendingChart() {
         </svg>
       </div>
 
-      <div className="mt-2 flex justify-between pl-8 text-[10px] text-muted-foreground tabular-nums">
+      <div className="mt-2 flex justify-between pl-12 text-[10px] text-muted-foreground tabular-nums">
         <span>1</span>
         <span>5</span>
         <span>10</span>

@@ -1,15 +1,6 @@
 'use client'
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { create } from 'zustand'
 import type {
   Account,
   AppData,
@@ -17,30 +8,12 @@ import type {
   Movement,
   Reminder,
   UserProfile,
-} from './types'
+  AssistantMessage,
+} from './types' // NEW: Import AssistantMessage
 import { emptyAppData } from './types'
 import { storage } from './storage'
 import { uid } from './format'
 import { getAccountTypeMeta, methodToAccountType } from './catalog'
-
-// ---- Actions --------------------------------------------------------------
-
-type Action =
-  | { type: 'HYDRATE'; data: AppData }
-  | { type: 'COMPLETE_ONBOARDING'; profile: UserProfile; accounts: Account[] }
-  | { type: 'ADD_ACCOUNT'; account: Account }
-  | { type: 'UPDATE_ACCOUNT'; account: Account }
-  | { type: 'DELETE_ACCOUNT'; id: string }
-  | { type: 'ADD_MOVEMENT'; movement: Movement }
-  | { type: 'UPDATE_MOVEMENT'; prev: Movement; next: Movement }
-  | { type: 'DELETE_MOVEMENT'; movement: Movement }
-  | { type: 'ADD_GOAL'; goal: Goal }
-  | { type: 'UPDATE_GOAL'; goal: Goal }
-  | { type: 'DELETE_GOAL'; id: string }
-  | { type: 'ADD_REMINDER'; reminder: Reminder }
-  | { type: 'UPDATE_REMINDER'; reminder: Reminder }
-  | { type: 'DELETE_REMINDER'; id: string }
-  | { type: 'RESET' }
 
 // ---- Balance side-effects -------------------------------------------------
 
@@ -48,129 +21,58 @@ type Action =
 function applyMovement(accounts: Account[], m: Movement, sign = 1): Account[] {
   return accounts.map((acc) => {
     let balance = acc.balance
-    const liability = getAccountTypeMeta(acc.type).liability
+    const isLiability = getAccountTypeMeta(acc.type).liability
+
+    // For liability accounts, the effect on the balance is inverted.
+    // E.g., 'gasto' on a credit card (liability) increases the negative balance.
+    const factor = isLiability ? -1 : 1
 
     if (m.type === 'transferencia') {
-      if (acc.id === m.accountId) balance -= sign * m.amount
-      if (acc.id === m.toAccountId) balance += sign * m.amount
+      if (acc.id === m.accountId) balance -= sign * m.amount * factor // Money leaves this account
+      if (acc.id === m.toAccountId) balance += sign * m.amount * factor // Money enters this account
       return { ...acc, balance, updatedAt: Date.now() }
     }
 
+    // Handle specific cases for 'deuda' and 'prestamo' in relation to liability accounts
+    if (m.type === 'deuda') { // When YOU borrow money (income/liability increase)
+      // If the movement is to accountId (where the money is received)
+      if (acc.id === m.accountId) {
+        balance += sign * m.amount * factor
+      }
+      // If the account is a 'deudas' type (tracking total money owed by YOU)
+      // This means the total debt increases (becomes more negative)
+      if (acc.type === 'deudas') {
+        balance += sign * m.amount * factor // Adjusts liability balance (e.g., -100 to -200 for new debt)
+      }
+    return { ...acc, balance, updatedAt: Date.now() }
+}
+
+    if (m.type === 'prestamo') { // When YOU lend money (expense/asset decrease)
+      // Money leaves the account
+      if (acc.id === m.accountId) {
+        balance -= sign * m.amount * factor
+      }
+      // If the account tracks loans you've given (an asset account type, if implemented)
+      // For now, it mostly impacts the source account.
+      // If acc.type === 'prestamos_otorgados' (Hypothetical asset account for loans given)
+      // then: balance += sign * m.amount * factor
+      return { ...acc, balance, updatedAt: Date.now() }
+    }
+
+    // Default handling for 'gasto' and 'ingreso'
     if (acc.id !== m.accountId) return acc
 
-    if (m.type === 'gasto' || m.type === 'prestamo') {
-      // money leaves the account; for liability accounts (credit) the debt grows
-      balance -= sign * m.amount * (liability ? 1 : 1)
+    if (m.type === 'gasto') {
+      balance -= sign * m.amount * factor
     } else if (m.type === 'ingreso') {
-      balance += sign * m.amount
-    } else if (m.type === 'deuda') {
-      // borrowing: cash comes in but it is owed (handled via deudas account)
-      balance += sign * m.amount
+      balance += sign * m.amount * factor
     }
+
     return { ...acc, balance, updatedAt: Date.now() }
   })
 }
 
-// ---- Reducer --------------------------------------------------------------
-
-function reducer(state: AppData, action: Action): AppData {
-  switch (action.type) {
-    case 'HYDRATE':
-      return action.data
-
-    case 'COMPLETE_ONBOARDING':
-      return {
-        ...state,
-        profile: action.profile,
-        accounts: action.accounts,
-      }
-
-    case 'ADD_ACCOUNT':
-      return { ...state, accounts: [...state.accounts, action.account] }
-
-    case 'UPDATE_ACCOUNT':
-      return {
-        ...state,
-        accounts: state.accounts.map((a) =>
-          a.id === action.account.id ? action.account : a,
-        ),
-      }
-
-    case 'DELETE_ACCOUNT':
-      return {
-        ...state,
-        accounts: state.accounts.filter((a) => a.id !== action.id),
-      }
-
-    case 'ADD_MOVEMENT':
-      return {
-        ...state,
-        movements: [action.movement, ...state.movements],
-        accounts: applyMovement(state.accounts, action.movement, 1),
-      }
-
-    case 'UPDATE_MOVEMENT': {
-      // reverse the previous effect, then apply the next
-      let accounts = applyMovement(state.accounts, action.prev, -1)
-      accounts = applyMovement(accounts, action.next, 1)
-      return {
-        ...state,
-        movements: state.movements.map((m) =>
-          m.id === action.next.id ? action.next : m,
-        ),
-        accounts,
-      }
-    }
-
-    case 'DELETE_MOVEMENT':
-      return {
-        ...state,
-        movements: state.movements.filter((m) => m.id !== action.movement.id),
-        accounts: applyMovement(state.accounts, action.movement, -1),
-      }
-
-    case 'ADD_GOAL':
-      return { ...state, goals: [...state.goals, action.goal] }
-
-    case 'UPDATE_GOAL':
-      return {
-        ...state,
-        goals: state.goals.map((g) =>
-          g.id === action.goal.id ? action.goal : g,
-        ),
-      }
-
-    case 'DELETE_GOAL':
-      return { ...state, goals: state.goals.filter((g) => g.id !== action.id) }
-
-    case 'ADD_REMINDER':
-      return { ...state, reminders: [...state.reminders, action.reminder] }
-
-    case 'UPDATE_REMINDER':
-      return {
-        ...state,
-        reminders: state.reminders.map((r) =>
-          r.id === action.reminder.id ? action.reminder : r,
-        ),
-      }
-
-    case 'DELETE_REMINDER':
-      return {
-        ...state,
-        reminders: state.reminders.filter((r) => r.id !== action.id),
-      }
-
-    case 'RESET':
-      return emptyAppData()
-
-    default:
-      return state
-  }
-}
-
-// ---- Context --------------------------------------------------------------
-
-type StoreValue = {
+export type StoreValue = {
   data: AppData
   ready: boolean
   // account helpers
@@ -196,124 +98,260 @@ type StoreValue = {
   reset: () => void
   // method -> account resolution
   resolveAccountIdByMethod: (method: string) => string | null
+  // NEW: Assistant History
+  addAssistantMessage: (message: Omit<AssistantMessage, 'id' | 'createdAt'>) => void;
 }
 
-const StoreContext = createContext<StoreValue | null>(null)
+export const useStore = create<StoreValue>((set, get) => ({
+  data: emptyAppData(),
+  ready: false,
 
-export function StoreProvider({ children }: { children: ReactNode }) {
-  const [data, dispatch] = useReducer(reducer, undefined, emptyAppData)
-  const [ready, setReady] = useState(false)
-  const hydrated = useRef(false)
-
-  // Hydrate from persistence on mount
-  useEffect(() => {
-    let active = true
-    storage.load().then((loaded) => {
-      if (!active) return
-      dispatch({ type: 'HYDRATE', data: loaded })
-      hydrated.current = true
-      setReady(true)
-    })
-    return () => {
-      active = false
-    }
-  }, [])
-
-  // Persist on every change after hydration
-  useEffect(() => {
-    if (!hydrated.current) return
-    storage.save(data)
-  }, [data])
-
-  const value = useMemo<StoreValue>(() => {
-    const resolveAccountIdByMethod = (method: string): string | null => {
-      const type = methodToAccountType[method]
-      if (type) {
-        const match = data.accounts.find((a) => a.type === type)
-        if (match) return match.id
+  addAccount: (input) => {
+    set((state) => {
+      const newAccount: Account = {
+        ...input,
+        id: uid('acc'),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
-      return data.accounts[0]?.id ?? null
+      return {
+        data: {
+          ...state.data,
+          accounts: [...state.data.accounts, newAccount],
+        },
+      }
+    });
+    // Triggers save via subscriber
+  },
+
+  updateAccount: (account) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        accounts: state.data.accounts.map((a) =>
+          a.id === account.id ? { ...account, updatedAt: Date.now() } : a,
+        ),
+      },
+    }))
+  },
+
+  deleteAccount: (id) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        accounts: state.data.accounts.filter((a) => a.id !== id),
+        movements: state.data.movements.map((m) => {
+          if (m.accountId === id) return { ...m, accountId: null }
+          if (m.toAccountId === id) return { ...m, toAccountId: null }
+          return m
+        }),
+      },
+    }))
+  },
+
+  addMovement: (input) => {
+    set((state) => {
+      const newMovement: Movement = {
+        ...input,
+        id: uid('mov'),
+        createdAt: Date.now(),
+      }
+      return {
+        data: {
+          ...state.data,
+          movements: [newMovement, ...state.data.movements],
+          accounts: applyMovement(state.data.accounts, newMovement, 1),
+        },
+      }
+    })
+  },
+
+  updateMovement: (next) => {
+    set((state) => {
+      const prev = state.data.movements.find((m) => m.id === next.id)
+      if (!prev) return {}
+      let accounts = applyMovement(state.data.accounts, prev, -1)
+      accounts = applyMovement(accounts, next, 1)
+      return {
+        data: {
+          ...state.data,
+          movements: state.data.movements.map((m) =>
+            m.id === next.id ? next : m,
+          ),
+          accounts,
+        },
+      }
+    })
+  },
+
+  deleteMovement: (movement) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        movements: state.data.movements.filter((m) => m.id !== movement.id),
+        accounts: applyMovement(state.data.accounts, movement, -1),
+      },
+    }))
+  },
+
+  addGoal: (input) => {
+    set((state) => {
+      const newGoal: Goal = {
+        ...input,
+        id: uid('goal'),
+        createdAt: Date.now(),
+      }
+      return {
+        data: {
+          ...state.data,
+          goals: [...state.data.goals, newGoal],
+        },
+      }
+    })
+  },
+
+  updateGoal: (goal) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        goals: state.data.goals.map((g) => (g.id === goal.id ? goal : g)),
+      },
+    }))
+  },
+
+  deleteGoal: (id) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        goals: state.data.goals.filter((g) => g.id !== id),
+      },
+    }))
+  },
+
+  addToGoal: (id, amount) => {
+    set((state) => {
+      const goal = state.data.goals.find((g) => g.id === id)
+      if (!goal) return {}
+      return {
+        data: {
+          ...state.data,
+          goals: state.data.goals.map((g) =>
+            g.id === id
+              ? { ...g, saved: Math.max(0, g.saved + amount) }
+              : g,
+          ),
+        },
+      }
+    })
+  },
+
+  addReminder: (input) => {
+    set((state) => {
+      const newReminder: Reminder = {
+        ...input,
+        id: uid('rem'),
+        createdAt: Date.now(),
+      }
+      return {
+        data: {
+          ...state.data,
+          reminders: [...state.data.reminders, newReminder],
+        },
+      }
+    })
+  },
+
+  updateReminder: (reminder) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        reminders: state.data.reminders.map((r) =>
+          r.id === reminder.id ? reminder : r,
+        ),
+      },
+    }))
+  },
+
+  deleteReminder: (id) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        reminders: state.data.reminders.filter((r) => r.id !== id),
+      },
+    }))
+  },
+
+  toggleReminder: (id) => {
+    set((state) => {
+      const reminder = state.data.reminders.find((r) => r.id === id)
+      if (!reminder) return {}
+      return {
+        data: {
+          ...state.data,
+          reminders: state.data.reminders.map((r) =>
+            r.id === id ? { ...r, completed: !r.completed } : r,
+          ),
+        },
+      }
+    })
+  },
+
+  completeOnboarding: (profile, accounts) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        profile,
+        accounts,
+      },
+    }))
+  },
+
+  reset: () => {
+    storage.clear()
+    set({ data: emptyAppData() })
+  },
+
+  resolveAccountIdByMethod: (method) => {
+    const { data } = get()
+    const type = methodToAccountType[method]
+    if (type) {
+      const match = data.accounts.find((a) => a.type === type)
+      if (match) return match.id
     }
+    return data.accounts[0]?.id ?? null
+  },
 
-    return {
-      data,
-      ready,
-      addAccount: (input) =>
-        dispatch({
-          type: 'ADD_ACCOUNT',
-          account: {
-            ...input,
-            id: uid('acc'),
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          },
-        }),
-      updateAccount: (account) =>
-        dispatch({ type: 'UPDATE_ACCOUNT', account }),
-      deleteAccount: (id) => dispatch({ type: 'DELETE_ACCOUNT', id }),
-
-      addMovement: (input) =>
-        dispatch({
-          type: 'ADD_MOVEMENT',
-          movement: { ...input, id: uid('mov'), createdAt: Date.now() },
-        }),
-      updateMovement: (next) => {
-        const prev = data.movements.find((m) => m.id === next.id)
-        if (prev) dispatch({ type: 'UPDATE_MOVEMENT', prev, next })
+  // NEW: Assistant History Actions
+  addAssistantMessage: (message) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        assistantHistory: [{
+          ...message,
+          id: uid('asm'),
+          createdAt: Date.now()
+        }, ...state.data.assistantHistory],
       },
-      deleteMovement: (movement) =>
-        dispatch({ type: 'DELETE_MOVEMENT', movement }),
+    }));
+  },
+}))
 
-      addGoal: (input) =>
-        dispatch({
-          type: 'ADD_GOAL',
-          goal: { ...input, id: uid('goal'), createdAt: Date.now() },
-        }),
-      updateGoal: (goal) => dispatch({ type: 'UPDATE_GOAL', goal }),
-      deleteGoal: (id) => dispatch({ type: 'DELETE_GOAL', id }),
-      addToGoal: (id, amount) => {
-        const goal = data.goals.find((g) => g.id === id)
-        if (goal)
-          dispatch({
-            type: 'UPDATE_GOAL',
-            goal: { ...goal, saved: Math.max(0, goal.saved + amount) },
-          })
-      },
+// Auto-hydrate from storage on client side
+if (typeof window !== 'undefined') {
+  storage.load().then((loaded) => {
+    useStore.setState({ data: loaded, ready: true })
+  })
 
-      addReminder: (input) =>
-        dispatch({
-          type: 'ADD_REMINDER',
-          reminder: { ...input, id: uid('rem'), createdAt: Date.now() },
-        }),
-      updateReminder: (reminder) =>
-        dispatch({ type: 'UPDATE_REMINDER', reminder }),
-      deleteReminder: (id) => dispatch({ type: 'DELETE_REMINDER', id }),
-      toggleReminder: (id) => {
-        const r = data.reminders.find((x) => x.id === id)
-        if (r)
-          dispatch({
-            type: 'UPDATE_REMINDER',
-            reminder: { ...r, completed: !r.completed },
-          })
-      },
-
-      completeOnboarding: (profile, accounts) =>
-        dispatch({ type: 'COMPLETE_ONBOARDING', profile, accounts }),
-      reset: () => {
-        storage.clear()
-        dispatch({ type: 'RESET' })
-      },
-      resolveAccountIdByMethod,
+  // Subscribe to updates and save to storage
+  useStore.subscribe((state) => {
+    if (state.ready) {
+      storage.save(state.data)
     }
-  }, [data, ready])
-
-  return (
-    <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
-  )
+  })
 }
 
-export function useStore(): StoreValue {
-  const ctx = useContext(StoreContext)
-  if (!ctx) throw new Error('useStore must be used within StoreProvider')
-  return ctx
+// Dummy provider for compatibility (not needed for Zustand but keeps imports safe)
+export function StoreProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
 }
+

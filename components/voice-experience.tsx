@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Mic, Check, X, ArrowDownLeft, ArrowUpRight, HandCoins } from 'lucide-react'
 import { parseVoice, type ParsedMovement } from '@/lib/parse-voice'
-import { fmt } from '@/lib/data'
+import { fmt } from '@/lib/format'
+import { useStore } from '@/lib/store'
+import { useSpeechRecognition, type VoiceStatus } from '@/hooks/use-speech-recognition' // NEW: Import useSpeechRecognition hook
 
-const examples = [
+export const voiceExamples = [
   'Gasté 150 en tacos',
   'Me pagaron 3500',
   'Pagué internet',
@@ -15,7 +17,7 @@ const examples = [
 
 const methods = ['Efectivo', 'Débito', 'Crédito', 'Ahorro', 'Inversión', 'Otro']
 
-type Phase = 'listening' | 'confirm' | 'saved'
+type Phase = 'listening' | 'confirm' | 'saved' | 'error' | 'unsupported'
 
 function Waveform({ active }: { active: boolean }) {
   return (
@@ -29,11 +31,11 @@ function Waveform({ active }: { active: boolean }) {
               ? { height: [6, 8 + ((i * 13) % 28), 6] }
               : { height: 4 }
           }
-          transition={{
-            duration: 0.7 + (i % 5) * 0.12,
-            repeat: active ? Infinity : 0,
-            ease: 'easeInOut',
-          }}
+          transition={
+            active
+              ? { duration: 0.7 + (i % 5) * 0.12, repeat: Infinity, ease: 'easeInOut' }
+              : { type: 'keyframes', duration: 0.5 } // Keep it flat when not active
+          }
         />
       ))}
     </div>
@@ -48,48 +50,105 @@ export function VoiceExperience({
   onClose: () => void
 }) {
   const [phase, setPhase] = useState<Phase>('listening')
-  const [transcript, setTranscript] = useState('')
   const [parsed, setParsed] = useState<ParsedMovement | null>(null)
   const [method, setMethod] = useState<string | null>(null)
+  const addMovement = useStore((s) => s.addMovement)
+
+  const resolveAccountIdByMethod = useStore(
+    (s) => s.resolveAccountIdByMethod
+  )
+
+  // NEW: Use the speech recognition hook
+  const { supported, status, transcript, error, start, stop, reset } = useSpeechRecognition()
 
   useEffect(() => {
     if (!open) return
+    
+    if (!supported) {
+      setPhase('unsupported')
+      return
+    }
+
     setPhase('listening')
-    setTranscript('')
     setParsed(null)
     setMethod(null)
+    reset() // Reset speech recognition state
+    start() // Start listening
 
-    const phrase = examples[Math.floor(Math.random() * examples.length)]
-    // simulate live transcription
-    let i = 0
-    const typer = setInterval(() => {
-      i++
-      setTranscript(phrase.slice(0, i))
-      if (i >= phrase.length) clearInterval(typer)
-    }, 45)
-
-    const done = setTimeout(() => {
-      setParsed(parseVoice(phrase))
-      setPhase('confirm')
-    }, 2100)
+    // Simulate auto-stop if for some reason it doesn't detect speech naturally
+    const timeout = setTimeout(() => {
+      if (status === 'listening' && transcript === '') {
+        stop()
+        setPhase('error') // Or could be 'done' if we want to confirm empty speech
+      }
+    }, 4000); // Stop listening after 4 seconds of silence/no input
 
     return () => {
-      clearInterval(typer)
-      clearTimeout(done)
+      stop()
+      clearTimeout(timeout)
     }
-  }, [open])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, supported])
+
+  // Handle status changes from speech recognition
+  useEffect(() => {
+    if (status === 'done' && transcript && phase === 'listening') {
+      const parsedResult = parseVoice(transcript) 
+      setParsed(parsedResult)
+      setPhase('confirm')
+    } else if (status === 'error' && phase === 'listening') {
+      setPhase('error')
+    } else if (status === 'listening' && transcript === '' && phase === 'error') {
+      // Reset visual error state if listening starts again
+      setPhase('listening') 
+    } else if (status === 'unsupported') {
+      setPhase('unsupported')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, transcript, phase])
 
   function confirm(m: string) {
+    if (!parsed) return
+  
+    const accountId = resolveAccountIdByMethod(m)
+  
+    addMovement({
+      title: parsed.title || 'Movimiento por voz',
+      category: parsed.category,
+      amount: parsed.amount,
+      type:
+        parsed.type === 'ingreso'
+          ? 'ingreso'
+          : parsed.type === 'deuda'
+          ? 'deuda'
+          : 'gasto',
+      accountId,
+      toAccountId: null,
+      method: m,
+      date: new Date().toISOString(),
+      person: parsed.person,
+      note: '',
+      icon: 'wallet',
+      color:
+        parsed.type === 'ingreso'
+          ? '#22c55e'
+          : parsed.type === 'deuda'
+          ? '#f59e0b'
+          : '#ef4444',
+    }) 
     setMethod(m)
     setPhase('saved')
-    setTimeout(onClose, 1400)
+  
+    setTimeout(() => {
+      onClose()
+    }, 1400) // Give user time to see 'saved' state
   }
 
   const typeMeta =
     parsed?.type === 'ingreso'
       ? { label: 'Ingreso', Icon: ArrowDownLeft, color: 'var(--positive)' }
       : parsed?.type === 'deuda'
-        ? { label: 'Préstamo', Icon: HandCoins, color: 'oklch(0.78 0.16 70)' }
+        ? { label: 'Préstamo', Icon: HandCoins, color: 'oklch(0.78 0.16 70)' } // Should be 'Deuda' if it means 'Me prestaron'
         : { label: 'Gasto', Icon: ArrowUpRight, color: 'var(--negative)' }
 
   return (
@@ -125,6 +184,34 @@ export function VoiceExperience({
             </button>
 
             <AnimatePresence mode="wait">
+              {phase === 'unsupported' && (
+                <motion.div
+                  key="unsupported"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center gap-5 pt-2"
+                >
+                  <p className="text-center text-red-500 font-semibold">Voz no soportada</p>
+                  <p className="text-sm text-muted-foreground text-center">
+                    Tu navegador no soporta el reconocimiento de voz o requiere habilitarlo.
+                  </p>
+                </motion.div>
+              )}
+              {phase === 'error' && (
+                <motion.div
+                  key="speech-error"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center gap-5 pt-2"
+                >
+                  <p className="text-center text-red-500 font-semibold">Error en el reconocimiento de voz</p>
+                  <p className="text-sm text-muted-foreground text-center">
+                    Asegúrate de haber otorgado el permiso al micrófono y vuelve a intentar.
+                  </p>
+                </motion.div>
+              )}
               {phase === 'listening' && (
                 <motion.div
                   key="listening"
@@ -143,7 +230,7 @@ export function VoiceExperience({
                   <p className="min-h-7 text-center text-lg font-medium text-balance">
                     {transcript || 'Di algo como "Gasté 150 en tacos"'}
                   </p>
-                  <Waveform active />
+                  <Waveform active={status === 'listening'} />
                 </motion.div>
               )}
 
@@ -233,5 +320,3 @@ export function VoiceExperience({
     </AnimatePresence>
   )
 }
-
-export { examples as voiceExamples }

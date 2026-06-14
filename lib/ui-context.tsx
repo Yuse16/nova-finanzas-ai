@@ -23,6 +23,11 @@ type ModalState =
   | { kind: 'all-movements' }
   | { kind: 'all-accounts' }
   | { kind: 'settings' }
+  | { kind: 'search' }
+  | { kind: 'filters' }
+  | { kind: 'notifications' } // NUEVO: Tipo de modal para notificaciones
+  | { kind: 'quick-actions' }
+  | { kind: 'more-options' }
 
 type UIValue = {
   modal: ModalState

@@ -6,18 +6,13 @@ import {
   TriangleAlert,
   HeartPulse,
   Sparkles,
-  PiggyBank,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { GlassCard } from './glass-card'
-import {
-  insights,
-  healthScore,
-  povertyZero,
-  reminders,
-  fmtShort,
-  fmt,
-} from '@/lib/data'
+import { useStore } from '@/lib/store'
+import { useUI } from '@/lib/ui-context'
+import { getIcon } from '@/lib/icons'
+import { fmt, fmtShort, relativeDue } from '@/lib/format'
 import { SectionHeader } from './section-header'
 
 const toneMap = {
@@ -27,11 +22,91 @@ const toneMap = {
 }
 
 export function SmartInsights() {
+  const { data } = useStore()
+
+  // Dynamic Insight Calculations
+  const now = new Date()
+  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  const thisMonthMovements = data.movements.filter((m) =>
+    m.date && m.date.startsWith(currentYearMonth)
+  )
+
+  const incomeThisMonth = thisMonthMovements
+    .filter((m) => m.type === 'ingreso')
+    .reduce((sum, m) => sum + m.amount, 0)
+
+  const expenseThisMonth = thisMonthMovements
+    .filter((m) => m.type === 'gasto')
+    .reduce((sum, m) => sum + m.amount, 0)
+
+  const assets = data.accounts
+    .filter((a) => a.type !== 'credito' && a.type !== 'deudas')
+    .reduce((sum, a) => sum + a.balance, 0)
+
+  const debts = Math.abs(
+    data.accounts
+      .filter((a) => a.type === 'credito' || a.type === 'deudas')
+      .reduce((sum, a) => sum + a.balance, 0)
+  )
+
+  const insightsList = []
+
+  if (incomeThisMonth > 0) {
+    const rate = Math.round(((incomeThisMonth - expenseThisMonth) / incomeThisMonth) * 100)
+    if (rate > 0) {
+      insightsList.push({
+        id: 'i1',
+        text: `¡Buen trabajo! Estás ahorrando el ${rate}% de tus ingresos este mes.`,
+        tone: 'good' as const,
+      })
+    } else {
+      insightsList.push({
+        id: 'i1',
+        text: `Tus gastos superan tus ingresos este mes por ${fmtShort(Math.abs(incomeThisMonth - expenseThisMonth))}.`,
+        tone: 'warn' as const,
+      })
+    }
+  } else {
+    insightsList.push({
+      id: 'i1',
+      text: 'Registra tus ingresos y gastos para ver análisis de ahorro detallados.',
+      tone: 'info' as const,
+    })
+  }
+
+  if (debts > 0 && assets > 0) {
+    const ratio = Math.round((debts / assets) * 100)
+    if (ratio > 40) {
+      insightsList.push({
+        id: 'i2',
+        text: `Cuidado: Tu nivel de deuda representa el ${ratio}% de tus activos disponibles.`,
+        tone: 'warn' as const,
+      })
+    }
+  }
+
+  const topCategoryMap = thisMonthMovements
+    .filter((m) => m.type === 'gasto')
+    .reduce((acc, m) => {
+      acc[m.category] = (acc[m.category] || 0) + m.amount
+      return acc
+    }, {} as Record<string, number>)
+
+  const sortedCategories = Object.entries(topCategoryMap).sort((a, b) => b[1] - a[1])
+  if (sortedCategories.length > 0) {
+    insightsList.push({
+      id: 'i3',
+      text: `Tu gasto más alto este mes es en ${sortedCategories[0][0]} (${fmtShort(sortedCategories[0][1])}).`,
+      tone: 'info' as const,
+    })
+  }
+
   return (
     <section className="flex flex-col gap-3">
       <SectionHeader title="Insights inteligentes" />
       <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
-        {insights.map((ins, i) => {
+        {insightsList.map((ins, i) => {
           const t = toneMap[ins.tone]
           return (
             <GlassCard
@@ -57,9 +132,52 @@ export function SmartInsights() {
 }
 
 export function HealthScore() {
-  const { score, factors } = healthScore
-  const r = 52
-  const c = 2 * Math.PI * r
+  const { data } = useStore()
+
+  // Calculate dynamic health score
+  const assets = data.accounts
+    .filter((a) => a.type !== 'credito' && a.type !== 'deudas')
+    .reduce((sum, a) => sum + a.balance, 0)
+
+  const debts = Math.abs(
+    data.accounts
+      .filter((a) => a.type === 'credito' || a.type === 'deudas')
+      .reduce((sum, a) => sum + a.balance, 0)
+  )
+
+  const now = new Date()
+  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const thisMonthMovements = data.movements.filter((m) =>
+    m.date && m.date.startsWith(currentYearMonth)
+  )
+
+  const income = thisMonthMovements
+    .filter((m) => m.type === 'ingreso')
+    .reduce((sum, m) => sum + m.amount, 0)
+
+  const expenses = thisMonthMovements
+    .filter((m) => m.type === 'gasto')
+    .reduce((sum, m) => sum + m.amount, 0)
+
+  const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : 0
+  const debtRatio = assets > 0 ? (debts / assets) * 100 : 0
+  const emergencyFundWeeks = expenses > 0 ? (assets / (expenses / 4)) : 12 // assume 12 weeks default
+
+  // Factors (0 to 100)
+  const savingsFactor = Math.max(0, Math.min(100, Math.round(income > 0 ? savingsRate : 50)))
+  const debtFactor = Math.max(0, Math.min(100, Math.round(Math.max(0, 100 - debtRatio))))
+  const spendingFactor = Math.max(0, Math.min(100, Math.round(100 - (income > 0 ? (expenses / income) * 100 : 40))))
+  const emergencyFactor = Math.max(0, Math.min(100, Math.round((emergencyFundWeeks / 12) * 100))) // 12 weeks (3 months) = 100%
+
+  const score = Math.round((savingsFactor + debtFactor + spendingFactor + emergencyFactor) / 4)
+
+  const factors = [
+    { label: 'Tasa de ahorro', value: savingsFactor },
+    { label: 'Nivel de deuda', value: debtFactor },
+    { label: 'Hábitos de gasto', value: spendingFactor },
+    { label: 'Fondo de emergencia', value: emergencyFactor },
+  ]
+
   const ring =
     score >= 75
       ? 'oklch(0.78 0.17 155)'
@@ -80,7 +198,7 @@ export function HealthScore() {
             <circle
               cx="60"
               cy="60"
-              r={r}
+              r={52}
               fill="none"
               stroke="oklch(1 0 0 / 16%)"
               strokeWidth="9"
@@ -88,14 +206,14 @@ export function HealthScore() {
             <motion.circle
               cx="60"
               cy="60"
-              r={r}
+              r={52}
               fill="none"
               stroke={ring}
               strokeWidth="9"
               strokeLinecap="round"
-              strokeDasharray={c}
-              initial={{ strokeDashoffset: c }}
-              animate={{ strokeDashoffset: c - (c * score) / 100 }}
+              strokeDasharray={2 * Math.PI * 52}
+              initial={{ strokeDashoffset: 2 * Math.PI * 52 }}
+              animate={{ strokeDashoffset: 2 * Math.PI * 52 - (2 * Math.PI * 52 * score) / 100 }}
               transition={{ duration: 1.1, ease: 'easeOut' }}
             />
           </svg>
@@ -132,6 +250,28 @@ export function HealthScore() {
 }
 
 export function PovertyZero() {
+  const { data } = useStore()
+
+  // Calculate dynamic avoidable spending
+  const cafe = data.movements
+    .filter((m) => m.type === 'gasto' && m.category === 'Café')
+    .reduce((sum, m) => sum + m.amount, 0)
+
+  const compras = data.movements
+    .filter((m) => m.type === 'gasto' && m.category === 'Compras')
+    .reduce((sum, m) => sum + m.amount, 0)
+
+  const ent = data.movements
+    .filter((m) => m.type === 'gasto' && m.category === 'Entretenimiento')
+    .reduce((sum, m) => sum + m.amount, 0)
+
+  const items = []
+  if (cafe > 0) items.push({ label: 'Café fuera de casa', amount: cafe })
+  if (ent > 0) items.push({ label: 'Servicios de streaming redundantes', amount: ent })
+  if (compras > 0) items.push({ label: 'Compras impulsivas evitables', amount: Math.round(compras * 0.2) })
+
+  const total = items.reduce((sum, item) => sum + item.amount, 0)
+
   return (
     <GlassCard
       variant="strong"
@@ -145,58 +285,82 @@ export function PovertyZero() {
         La IA detectó gastos recuperables este mes:
       </p>
       <p className="mt-1 text-3xl font-semibold tabular-nums text-[oklch(0.82_0.17_155)]">
-        + {fmtShort(povertyZero.total)}
+        + {fmtShort(total)}
       </p>
 
-      <ul className="mt-4 flex flex-col">
-        {povertyZero.items.map((item) => (
-          <li
-            key={item.label}
-            className="flex items-center justify-between border-b border-white/10 py-2.5 text-sm last:border-0"
-          >
-            <span className="text-pretty pr-3">{item.label}</span>
-            <span className="font-semibold tabular-nums text-[oklch(0.82_0.17_155)]">
-              {fmtShort(item.amount)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {items.length > 0 ? (
+        <ul className="mt-4 flex flex-col">
+          {items.map((item) => (
+            <li
+              key={item.label}
+              className="flex items-center justify-between border-b border-white/10 py-2.5 text-sm last:border-0"
+            >
+              <span className="text-pretty pr-3">{item.label}</span>
+              <span className="font-semibold tabular-nums text-[oklch(0.82_0.17_155)]">
+                {fmtShort(item.amount)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground text-center py-2">
+          ¡Felicidades! No se detectaron fugas de capital este mes.
+        </p>
+      )}
     </GlassCard>
   )
 }
 
 export function RemindersModule() {
+  const { data } = useStore()
+  const { open } = useUI()
+
   return (
     <GlassCard className="p-5">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight">Recordatorios</h2>
-        <span className="glass-subtle rounded-full px-3 py-1 text-xs text-muted-foreground">
-          Pronto en WhatsApp
-        </span>
+        <button
+          type="button"
+          onClick={() => open({ kind: 'reminder' })}
+          className="glass-subtle rounded-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground active:text-foreground transition-colors"
+        >
+          Agregar
+        </button>
       </div>
       <ul className="mt-4 flex flex-col">
-        {reminders.map((r) => (
-          <li
-            key={r.id}
-            className="flex items-center gap-3 border-b border-white/10 py-3 last:border-0"
-          >
-            <span
-              className="grid size-10 shrink-0 place-items-center rounded-xl"
-              style={{ background: r.color }}
+        {data.reminders.map((r) => {
+          const Icon = getIcon(r.icon)
+          const dueStr = relativeDue(r.dueDate)
+
+          return (
+            <li
+              key={r.id}
+              onClick={() => open({ kind: 'reminder', editing: r })}
+              className="flex items-center gap-3 border-b border-white/10 py-3 last:border-0 cursor-pointer hover:bg-white/5 transition-colors rounded-xl px-2 -mx-2"
             >
-              <r.icon className="size-5 text-white" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium leading-tight">
-                {r.title}
+              <span
+                className="grid size-10 shrink-0 place-items-center rounded-xl"
+                style={{ background: r.color }}
+              >
+                <Icon className="size-5 text-white" />
               </span>
-              <span className="text-xs text-muted-foreground">{r.due}</span>
-            </span>
-            <span className="text-sm font-semibold tabular-nums">
-              {fmt(r.amount)}
-            </span>
-          </li>
-        ))}
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium leading-tight">
+                  {r.title}
+                </span>
+                <span className="text-xs text-muted-foreground">{dueStr}</span>
+              </span>
+              <span className="text-sm font-semibold tabular-nums">
+                {fmt(r.amount)}
+              </span>
+            </li>
+          )
+        })}
+        {data.reminders.length === 0 && (
+          <p className="py-4 text-center text-sm text-muted-foreground">
+            No tienes recordatorios creados.
+          </p>
+        )}
       </ul>
     </GlassCard>
   )
