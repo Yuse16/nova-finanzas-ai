@@ -1,59 +1,46 @@
 'use client'
 
 import { Home, ArrowLeftRight, Wallet, Menu, Plus } from 'lucide-react'
-import type { RefObject } from 'react'
-import { useUI } from '@/lib/ui-context' // Import now here
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useUI } from '@/lib/ui-context'
 
 const items = [
-  { label: 'Inicio', icon: Home, ref: 'homeRef' },
-  { label: 'Movimientos', icon: ArrowLeftRight, ref: 'movementsRef' },
-  { label: 'Cuentas', icon: Wallet, ref: 'accountsRef' },
-  { label: 'Más', icon: Menu, ref: 'moreOptions' }, // Changed ref to moreOptions for clarity
+  { label: 'Inicio', icon: Home, href: '/' },
+  { label: 'Movimientos', icon: ArrowLeftRight, href: '/movimientos' },
 ]
 
-export function BottomNav({
-  onAdd,
-  onNavigate,
-  homeRef,
-  movementsRef,
-  accountsRef,
-}: {
-  onAdd: () => void
-  onNavigate: (ref: RefObject<HTMLDivElement>) => void
-  homeRef: RefObject<HTMLDivElement>
-  movementsRef: RefObject<HTMLDivElement>
-  accountsRef: RefObject<HTMLDivElement>
-}) {
-  const refMap: Record<string, RefObject<HTMLDivElement>> = {
-    homeRef: homeRef,
-    movementsRef: movementsRef,
-    accountsRef: accountsRef,
-  }
+const rightItems = [
+  { label: 'Cuentas', icon: Wallet, href: '/cuentas' },
+]
 
-  const { open } = useUI() // Use useUI hook here
+export function BottomNav() {
+  const pathname = usePathname()
+  const { open } = useUI()
+
+  const isActive = (href: string) => pathname === href
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[max(env(safe-area-inset-bottom),0.75rem)]">
       <nav className="glass-strong pointer-events-auto relative mx-4 flex w-full max-w-md items-center justify-between rounded-3xl px-6 py-3">
         <div className="flex flex-1 justify-around">
-          {items.slice(0, 2).map((it, i) => (
-            <button
+          {items.map((it) => (
+            <Link
               key={it.label}
-              type="button"
-              onClick={() => it.ref && refMap[it.ref] && onNavigate(refMap[it.ref])} // Safeguard
+              href={it.href}
               className={`flex flex-col items-center gap-1 text-[11px] ${
-                i === 0 ? 'text-foreground' : 'text-muted-foreground'
+                isActive(it.href) ? 'text-foreground' : 'text-muted-foreground'
               }`}
             >
               <it.icon className="size-5" />
               {it.label}
-            </button>
+            </Link>
           ))}
         </div>
 
         <button
           type="button"
-          onClick={onAdd}
+          onClick={() => open({ kind: 'quick-actions' })}
           aria-label="Acción rápida"
           className="relative -mt-8 grid size-16 shrink-0 place-items-center rounded-full bg-[oklch(0.62_0.17_290)] shadow-[0_10px_30px_-6px_oklch(0.5_0.18_290/70%)] transition-transform active:scale-95"
         >
@@ -65,26 +52,28 @@ export function BottomNav({
         </button>
 
         <div className="flex flex-1 justify-around">
-          {items.slice(2).map((it) => (
-            <button
+          {rightItems.map((it) => (
+            <Link
               key={it.label}
-              type="button"
-              onClick={() => {
-                if (it.ref === 'moreOptions') {
-                  open({ kind: 'more-options' })
-                } else if (it.ref && refMap[it.ref]) {
-                  onNavigate(refMap[it.ref])
-                }
-              }}
-              className="flex flex-col items-center gap-1 text-[11px] text-muted-foreground"
+              href={it.href}
+              className={`flex flex-col items-center gap-1 text-[11px] ${
+                isActive(it.href) ? 'text-foreground' : 'text-muted-foreground'
+              }`}
             >
               <it.icon className="size-5" />
               {it.label}
-            </button>
+            </Link>
           ))}
+          <button
+            type="button"
+            onClick={() => open({ kind: 'more-options' })}
+            className="flex flex-col items-center gap-1 text-[11px] text-muted-foreground"
+          >
+            <Menu className="size-5" />
+            Más
+          </button>
         </div>
       </nav>
     </div>
   )
 }
-

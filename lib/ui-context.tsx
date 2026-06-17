@@ -36,6 +36,9 @@ type UIValue = {
   close: () => void
   tab: string
   setTab: (t: string) => void
+  voiceOpen: boolean
+  openVoice: () => void
+  closeVoice: () => void
 }
 
 const UIContext = createContext<UIValue | null>(null)
@@ -43,13 +46,16 @@ const UIContext = createContext<UIValue | null>(null)
 export function UIProvider({ children }: { children: ReactNode }) {
   const [modal, setModal] = useState<ModalState>({ kind: 'none' })
   const [tab, setTab] = useState('inicio')
+  const [voiceOpen, setVoiceOpen] = useState(false)
 
   const open = useCallback((m: ModalState) => setModal(m), [])
   const close = useCallback(() => setModal({ kind: 'none' }), [])
+  const openVoice = useCallback(() => setVoiceOpen(true), [])
+  const closeVoice = useCallback(() => setVoiceOpen(false), [])
 
   const value = useMemo(
-    () => ({ modal, open, close, tab, setTab }),
-    [modal, open, close, tab],
+    () => ({ modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice }),
+    [modal, open, close, tab, voiceOpen, openVoice, closeVoice],
   )
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>
 }
