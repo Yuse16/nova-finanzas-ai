@@ -28,6 +28,7 @@ type ModalState =
   | { kind: 'notifications' } // NUEVO: Tipo de modal para notificaciones
   | { kind: 'quick-actions' }
   | { kind: 'more-options' }
+  | { kind: 'balance-detail' }
 
 type UIValue = {
   modal: ModalState

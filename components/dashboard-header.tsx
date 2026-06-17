@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { GlassCard } from './glass-card'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context' // NUEVA IMPORTACIÓN
+import { getAccountTypeMeta } from '@/lib/catalog'
 import { fmt, fmtShort } from '@/lib/format'
 
 export function DashboardHeader() {
@@ -12,8 +13,13 @@ export function DashboardHeader() {
   const { open } = useUI() // NUEVO: Obtener la función open de useUI
   const name = data.profile?.name ?? 'Usuario'
 
-  // Calculate global balance (sum of all accounts)
-  const availableBalance = data.accounts.reduce((sum, acc) => sum + acc.balance, 0)
+  // Calculate available balance (liquid accounts only)
+  const availableBalance = data.accounts
+    .filter((a) => !getAccountTypeMeta(a.type).liability)
+    .reduce((sum, acc) => sum + acc.balance, 0)
+
+  // Calculate total balance (all accounts, including liabilities stored as negative)
+  const totalBalance = data.accounts.reduce((sum, acc) => sum + acc.balance, 0)
 
   // Calculate net balance change for the current month (Income - Expense)
   const now = new Date()
@@ -60,7 +66,8 @@ export function DashboardHeader() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="p-6"
+        className="p-6 cursor-pointer active:scale-[0.98] transition-transform"
+        onClick={() => open({ kind: 'balance-detail' })}
       >
         <div className="flex items-start justify-between">
           <div>

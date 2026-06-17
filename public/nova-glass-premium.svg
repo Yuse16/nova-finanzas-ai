@@ -1,0 +1,56 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Fondo translúcido morado con gradiente y desenfoque (Glassmorphism base) -->
+    <filter id="blurGlass" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blurred"/>
+      <feOffset in="blurred" dx="0" dy="0" result="offsetBlurred"/>
+      <feComposite in="SourceGraphic" in2="offsetBlurred" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="compositeResult"/>
+      <feBlend in="SourceGraphic" in2="compositeResult" mode="normal"/>
+    </filter>
+    <radialGradient id="glassGradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 256) rotate(90) scale(256)">
+        <stop stop-color="#BE82E6" stop-opacity="0.8"/>
+        <stop offset="1" stop-color="#4A7FD6" stop-opacity="0.6"/>
+    </radialGradient>
+    <linearGradient id="shineGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="white" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Círculo base con fondo semi-transparente -->
+  <circle cx="256" cy="256" r="240" fill="url(#glassGradient)" style="filter:url(#blurGlass);"/>
+  <circle cx="256" cy="256" r="240" stroke="white" stroke-opacity="0.2" stroke-width="2"/>
+
+  <!-- Brillo morado sutil (tomado del color del botón flotante) -->
+  <circle cx="256" cy="256" r="200" fill="transparent" stroke="#BE82E6" stroke-width="12" stroke-opacity="0.1"/>
+  <circle cx="256" cy="256" r="150" fill="transparent" stroke="#8A2BE2" stroke-width="8" stroke-opacity="0.08"/>
+
+  <!-- Reflejo superior (efecto de vidrio) -->
+  <g opacity="0.8">
+    <ellipse cx="256" cy="180" rx="180" ry="80" fill="url(#shineGradient)" transform="rotate(-30 256 180)"/>
+    <ellipse cx="256" cy="120" rx="120" ry="50" fill="white" opacity="0.6" transform="rotate(-30 256 120)"/>
+  </g>
+  
+  <!-- Sombra interior para profundidad 3D (similar a Human Interface) -->
+  <circle cx="256" cy="256" r="240" fill="transparent">
+    <filter id="innerShadow">
+        <feOffset dx="0" dy="8"/>
+        <feGaussianBlur stdDeviation="15" result="offset-blur"/>
+        <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
+        <feFlood flood-color="black" flood-opacity="0.4" result="color"/>
+        <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
+        <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+    </filter>
+  </circle>
+
+  <!-- Símbolo N de Nova ligeramente 3D -->
+  <text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle" font-family="Verdana, sans-serif" font-size="280" font-weight="bold" fill="white" stroke="rgba(0,0,0,0.1)" stroke-width="5" transform="translate(0, -10)">
+    N
+    <!-- Sombra del texto para profundidad -->
+    <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="black" flood-opacity="0.3"/>
+  </text>
+  <text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle" font-family="Verdana, sans-serif" font-size="280" font-weight="bold" fill="white" transform="translate(0, -10)">
+    N
+  </text>
+
+</svg>

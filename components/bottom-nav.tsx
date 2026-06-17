@@ -34,7 +34,7 @@ export function BottomNav({
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-      <nav className="glass-strong pointer-events-auto relative mx-4 flex w-full max-w-md items-center justify-between rounded-[2rem] px-6 py-3">
+      <nav className="glass-strong pointer-events-auto relative mx-4 flex w-full max-w-md items-center justify-between rounded-3xl px-6 py-3">
         <div className="flex flex-1 justify-around">
           {items.slice(0, 2).map((it, i) => (
             <button

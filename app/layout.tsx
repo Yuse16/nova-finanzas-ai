@@ -34,8 +34,8 @@ export const metadata: Metadata = {
     title: 'Nova Finanzas',
   },
   icons: [
-    { rel: 'apple-touch-icon', url: '/apple-icon.png' },
-    { rel: 'icon', url: '/icon.svg' },
+    { rel: 'apple-touch-icon', url: '/apple-touch-icon.png' }, // Apuntará al nuevo icono
+    { rel: 'icon', url: '/favicon.ico' }, // Apuntará al nuevo icono
   ],
 }
 
@@ -46,7 +46,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: 'cover',
+  viewportFit: 'cover', // CRUCIAL para que safe-area-inset-* funcione
 }
 
 export default function RootLayout({
@@ -64,8 +64,10 @@ export default function RootLayout({
   const fontClasses = `${geistSans.variable} ${geistMono.variable} ${inter.variable} ${roboto_mono.variable}`
 
   return (
-    <html lang="es" className={`${fontClasses} bg-background`}>
-      <body className="font-system antialiased"> {/* Use font-system as default from tailwind.config.js */}
+    // Aplicar las clases de fuente generadas directamente al html
+    <html lang="es" className={fontClasses}>
+      {/* Añadir style para safe-area-bottom en el body, y el padding-top lo controlará el div en page.tsx */}
+      <body className="font-system antialiased" style={{ paddingBottom: 'var(--sab)' }}>
         <UIProvider>
           {children}
         </UIProvider>
@@ -74,3 +76,4 @@ export default function RootLayout({
     </html>
   )
 }
+

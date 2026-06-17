@@ -13,7 +13,7 @@ export function AssistantHistoryModal() {
   const isOpen = modal.kind === 'assistant'
 
   // Sort history newest first
-  const history = [...data.assistantHistory].sort((a, b) => b.createdAt - a.createdAt)
+  const history = [...(data.assistantHistory ?? [])].sort((a, b) => b.createdAt - a.createdAt)
 
   return (
     <GlassSheet

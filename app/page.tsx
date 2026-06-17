@@ -40,6 +40,7 @@ import { SearchModal } from '@/components/search-modal'
 import { FiltersModal } from '@/components/filters-modal'
 import { FontProvider } from '@/components/font-provider'
 import { NotificationsModal } from '@/components/notifications-modal';
+import { BalanceDetailModal } from '@/components/balance-detail-modal';
 
 export default function Page() {
   const { data, ready } = useStore()
@@ -74,7 +75,11 @@ export default function Page() {
 
   return (
     <FontProvider>
-      <div className="relative min-h-screen overflow-x-hidden">
+      {/* Aplicar padding-top y min-height para respetar safe areas */}
+      <div
+        className="relative min-h-screen overflow-x-hidden"
+        style={{ paddingTop: 'var(--sat)', minHeight: 'calc(100vh - var(--sat) - var(--sab))' }}
+      >
         {/* Atmospheric background */}
         <div className="fixed inset-0 -z-10">
           <Image
@@ -138,6 +143,7 @@ export default function Page() {
         </main>
 
         {/* Bottom Nav onAdd triggers the Quick Actions Modal instead of voice directly */}
+        {/* El BottomNav ya tiene un padding-bottom del body/html si se definió correctamente, pero el contenido de page.tsx debe tener un espacio general */}
         <BottomNav
           onAdd={() => open({ kind: 'quick-actions' })}
           onNavigate={scrollToSection}
@@ -160,9 +166,11 @@ export default function Page() {
         <SearchModal />
         <FiltersModal />
         <NotificationsModal />
+        <BalanceDetailModal />
 
         <VoiceExperience open={voiceOpen} onClose={() => setVoiceOpen(false)} />
       </div>
     </FontProvider>
   )
 }
+
