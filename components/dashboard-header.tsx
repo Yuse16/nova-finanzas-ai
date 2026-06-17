@@ -72,7 +72,7 @@ export function DashboardHeader() {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm text-muted-foreground">Dinero disponible</p>
-            <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums">
+            <p className="mt-1 text-4xl font-bold tracking-tight tabular-nums">
               {fmt(availableBalance)}
             </p>
           </div>

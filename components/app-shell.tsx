@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-hidden
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-[oklch(0.55_0.13_255/35%)]" />
+          <div className="absolute inset-0 bg-[oklch(0.35_0.12_260/25%)]" />
         </div>
 
         <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-5 pb-40 pt-6">
