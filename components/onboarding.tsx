@@ -71,14 +71,14 @@ export function Onboarding() {
     <div className="relative min-h-screen overflow-hidden">
       <div className="fixed inset-0 -z-10">
         <Image
-          src="/bg-atmosphere.png"
+          src="/bg-aurora.webp"
           alt=""
           fill
           priority
           aria-hidden
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-[oklch(0.55_0.13_255/35%)]" />
+        <div className="absolute inset-0 bg-[oklch(0.35_0.12_260/25%)]" />
       </div>
 
       <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-10 pt-[max(env(safe-area-inset-top),2rem)]">

@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="fixed inset-0 -z-10">
           <Image
-            src="/bg-atmosphere.png"
+            src="/bg-aurora.webp"
             alt=""
             fill
             priority
