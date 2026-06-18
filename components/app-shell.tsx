@@ -1,8 +1,9 @@
 'use client'
 
-import type { ReactNode } from 'react'
-import Image from 'next/image'
+import { useEffect, type ReactNode } from 'react'
+
 import { FontProvider } from './font-provider'
+import { generateNotifications, saveNotifications } from '@/lib/notifications'
 import { BottomNav } from './bottom-nav'
 import { VoiceExperience } from './voice-experience'
 import { Onboarding } from './onboarding'
@@ -27,7 +28,24 @@ import { ResetFinancialModal } from './reset-financial-modal'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, ready } = useStore()
-  const { voiceOpen, closeVoice } = useUI()
+  const { voiceOpen, closeVoice, theme, setTheme } = useUI()
+
+  // Apply saved theme on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('nova-finanzas:theme')
+    if (stored === 'dark' || stored === 'light') {
+      setTheme(stored)
+    } else {
+      setTheme('light')
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Regenerate notifications on mount and when financial data changes
+  useEffect(() => {
+    if (!ready) return
+    const notifs = generateNotifications(data)
+    saveNotifications(notifs)
+  }, [data, ready])
 
   if (!ready) {
     return (
@@ -47,16 +65,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="relative min-h-screen overflow-x-hidden"
         style={{ paddingTop: 'var(--sat)', minHeight: 'calc(100vh - var(--sat) - var(--sab))' }}
       >
-        <div className="fixed inset-0 -z-10">
-          <Image
-            src="/bg-aurora.webp"
-            alt=""
-            fill
-            priority
-            aria-hidden
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-[oklch(0.35_0.12_260/25%)]" />
+        <div className="fixed inset-0 -z-10" style={{ backgroundImage: 'var(--bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}>
+          <div className="absolute inset-0" style={{ background: 'var(--bg-overlay)' }} />
         </div>
 
         <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-5 pb-40 pt-6">

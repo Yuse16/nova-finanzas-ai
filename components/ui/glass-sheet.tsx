@@ -40,7 +40,8 @@ export function GlassSheet({
             type="button"
             aria-label="Cerrar"
             onClick={onClose}
-            className="absolute inset-0 bg-[oklch(0.3_0.08_260/45%)] backdrop-blur-md"
+            className="absolute inset-0 backdrop-blur-md"
+            style={{ background: 'var(--overlay-bg)' }}
           />
 
           <motion.div

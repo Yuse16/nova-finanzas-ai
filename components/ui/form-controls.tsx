@@ -50,12 +50,17 @@ export function GlassButton({
     'flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100'
   const styles =
     variant === 'primary'
-      ? 'bg-[oklch(0.62_0.17_290)] text-white shadow-[0_8px_24px_-8px_oklch(0.25_0.10_290/35%)]'
+      ? 'text-white'
       : variant === 'danger'
-        ? 'bg-[oklch(0.62_0.2_18)] text-white'
+        ? 'text-white'
         : 'glass-subtle text-foreground'
+  const bgStyle = variant === 'primary'
+    ? { background: 'var(--primary-btn-bg)', boxShadow: 'var(--primary-btn-shadow)' }
+    : variant === 'danger'
+      ? { background: 'var(--danger-btn-bg)' }
+      : undefined
   return (
-    <button className={cn(base, styles, className)} {...props}>
+    <button className={cn(base, styles, className)} style={bgStyle} {...props}>
       {children}
     </button>
   )

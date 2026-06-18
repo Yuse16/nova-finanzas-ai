@@ -40,14 +40,36 @@ type UIValue = {
   voiceOpen: boolean
   openVoice: () => void
   closeVoice: () => void
+  theme: 'light' | 'dark'
+  setTheme: (t: 'light' | 'dark') => void
 }
 
 const UIContext = createContext<UIValue | null>(null)
+
+function getInitialTheme(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'light'
+  const stored = localStorage.getItem('nova-finanzas:theme')
+  if (stored === 'dark' || stored === 'light') return stored
+  return 'light'
+}
+
+function applyTheme(t: 'light' | 'dark') {
+  if (typeof document === 'undefined') return
+  document.documentElement.setAttribute('data-theme', t)
+}
 
 export function UIProvider({ children }: { children: ReactNode }) {
   const [modal, setModal] = useState<ModalState>({ kind: 'none' })
   const [tab, setTab] = useState('inicio')
   const [voiceOpen, setVoiceOpen] = useState(false)
+  const [theme, setThemeState] = useState<'light' | 'dark'>(getInitialTheme)
+
+  // Apply data-theme on mount and on change
+  const setTheme = useCallback((t: 'light' | 'dark') => {
+    setThemeState(t)
+    applyTheme(t)
+    localStorage.setItem('nova-finanzas:theme', t)
+  }, [])
 
   const open = useCallback((m: ModalState) => setModal(m), [])
   const close = useCallback(() => setModal({ kind: 'none' }), [])
@@ -55,8 +77,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const closeVoice = useCallback(() => setVoiceOpen(false), [])
 
   const value = useMemo(
-    () => ({ modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice }),
-    [modal, open, close, tab, voiceOpen, openVoice, closeVoice],
+    () => ({ modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice, theme, setTheme }),
+    [modal, open, close, tab, voiceOpen, openVoice, closeVoice, theme, setTheme],
   )
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>
 }

@@ -96,10 +96,9 @@ export function CustomAccountFields({
             onClick={() => onLiabilityChange(false)}
             className={cn(
               'flex-1 rounded-2xl p-3 text-sm font-semibold transition-all',
-              !isLiability
-                ? 'bg-[oklch(0.72_0.16_150)] text-white shadow-[0_4px_12px_-4px_oklch(0.72_0.16_150/40%)]'
-                : 'glass-subtle text-white/70',
+              !isLiability ? 'text-white' : 'glass-subtle text-white/70',
             )}
+            style={!isLiability ? { background: 'var(--available-bg)', boxShadow: '0 4px 12px -4px var(--available-shadow)' } : undefined}
           >
             Dinero disponible
           </button>
@@ -108,10 +107,9 @@ export function CustomAccountFields({
             onClick={() => onLiabilityChange(true)}
             className={cn(
               'flex-1 rounded-2xl p-3 text-sm font-semibold transition-all',
-              isLiability
-                ? 'bg-[oklch(0.68_0.19_25)] text-white shadow-[0_4px_12px_-4px_oklch(0.68_0.19_25/40%)]'
-                : 'glass-subtle text-white/70',
+              isLiability ? 'text-white' : 'glass-subtle text-white/70',
             )}
+            style={isLiability ? { background: 'var(--debt-bg)', boxShadow: '0 4px 12px -4px var(--debt-shadow)' } : undefined}
           >
             Deuda
           </button>

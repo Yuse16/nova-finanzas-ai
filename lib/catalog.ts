@@ -1,4 +1,4 @@
-import type { Account, AccountType, Method, MovementType } from './types'
+import type { Account, AccountType, Bank, Method, MovementType } from './types'
 
 // ---- Account type metadata ------------------------------------------------
 
@@ -240,6 +240,25 @@ export const methodToAccountType: Record<string, AccountType> = {
   Ahorro: 'ahorro',
   Inversión: 'inversion',
 }
+
+// ---- Banks ----------------------------------------------------------------
+
+export const bankOptions: { value: Bank; label: string }[] = [
+  { value: 'BBVA', label: 'BBVA' },
+  { value: 'Banorte', label: 'Banorte' },
+  { value: 'Santander', label: 'Santander' },
+  { value: 'Citibanamex', label: 'Citibanamex' },
+  { value: 'HSBC', label: 'HSBC' },
+  { value: 'Nu', label: 'Nu' },
+  { value: 'Scotiabank', label: 'Scotiabank' },
+  { value: 'Inbursa', label: 'Inbursa' },
+  { value: 'Hey Banco', label: 'Hey Banco' },
+  { value: 'Otros', label: 'Otros' },
+]
+
+export const cardIdentifierOptions = [
+  'Principal', 'Nómina', 'Viajes', 'Negocio', 'Personal', 'Emergencias',
+]
 
 // ---- Goal & reminder presets ---------------------------------------------
 

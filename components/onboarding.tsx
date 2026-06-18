@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
+import { useEffect, useState } from 'react'
+
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check, Sparkles, User, Plus, X } from 'lucide-react'
 import { useStore } from '@/lib/store'
+import { useUI } from '@/lib/ui-context'
 import { accountTypes } from '@/lib/catalog'
 import { getIcon } from '@/lib/icons'
 import { fmt } from '@/lib/format'
@@ -37,8 +38,17 @@ function getPreviousNameFromSnapshot(): string | null {
 
 export function Onboarding() {
   const { completeOnboarding } = useStore()
+  const { theme, setTheme } = useUI()
   const previousName = getPreviousNameFromSnapshot()
   const isFromReset = previousName !== null
+
+  // Apply saved theme on mount (onboarding may render before app-shell effect)
+  useEffect(() => {
+    const stored = localStorage.getItem('nova-finanzas:theme')
+    if (stored === 'dark' || stored === 'light') {
+      setTheme(stored)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const stepOffset = isFromReset ? 1 : 0
   const totalSteps = 3 + stepOffset
 
@@ -114,16 +124,8 @@ export function Onboarding() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <div className="fixed inset-0 -z-10">
-        <Image
-          src="/bg-aurora.webp"
-          alt=""
-          fill
-          priority
-          aria-hidden
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-[oklch(0.35_0.12_260/25%)]" />
+      <div className="fixed inset-0 -z-10" style={{ backgroundImage: 'var(--bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}>
+        <div className="absolute inset-0" style={{ background: 'var(--bg-overlay)' }} />
       </div>
 
       <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-10 pt-[max(env(safe-area-inset-top),2rem)]">

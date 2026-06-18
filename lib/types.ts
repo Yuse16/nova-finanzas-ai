@@ -26,6 +26,18 @@ export type Method =
   | 'Inversión'
   | 'Otro'
 
+export type Bank =
+  | 'BBVA'
+  | 'Banorte'
+  | 'Santander'
+  | 'Citibanamex'
+  | 'HSBC'
+  | 'Nu'
+  | 'Scotiabank'
+  | 'Inbursa'
+  | 'Hey Banco'
+  | 'Otros'
+
 export type Account = {
   id: string
   name: string
@@ -39,6 +51,18 @@ export type Account = {
   icon: string
   color: string
   isLiability?: boolean
+  /** Bank name for credit/debit card accounts. */
+  bank?: string
+  /** Optional user label (e.g. "Principal", "Nómina", "Viajes"). */
+  identifier?: string
+  /** Credit limit for credit card accounts. */
+  limiteCredito?: number
+  /** Day of month (1-31) for credit card cutoff. */
+  fechaCorte?: number
+  /** Day of month (1-31) for credit card payment due. */
+  fechaPago?: number
+  /** Whether the card is active. */
+  activa?: boolean
   createdAt: number
   updatedAt: number
 }
@@ -75,6 +99,16 @@ export type Goal = {
   color: string
   image?: string
   createdAt: number
+}
+
+export type Notification = {
+  id: string
+  title: string
+  message: string
+  type: 'recordatorio' | 'tarjeta' | 'meta' | 'gasto' | 'saldo' | 'ia'
+  date: number
+  read: boolean
+  priority: 'alta' | 'media' | 'baja'
 }
 
 export type Reminder = {

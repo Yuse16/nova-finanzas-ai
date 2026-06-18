@@ -42,11 +42,15 @@ export function BottomNav() {
           type="button"
           onClick={() => open({ kind: 'quick-actions' })}
           aria-label="Acción rápida"
-          className="relative -mt-8 grid size-16 shrink-0 place-items-center rounded-full bg-[oklch(0.62_0.17_290)] shadow-[0_8px_32px_-8px_oklch(0.25_0.10_290/35%)] transition-transform active:scale-95"
+          className="relative -mt-8 grid size-16 shrink-0 place-items-center rounded-full transition-transform active:scale-95"
+          style={{
+            background: 'var(--fab-bg)',
+            boxShadow: 'var(--fab-shadow), var(--fab-glow)',
+          }}
         >
           <span
-            className="absolute size-16 rounded-full bg-[oklch(0.7_0.18_290)]"
-            style={{ animation: 'nova-pulse 2.4s ease-out infinite' }}
+            className="absolute size-16 rounded-full"
+            style={{ background: 'var(--fab-pulse)', animation: 'nova-pulse 2.4s ease-out infinite' }}
           />
           <Plus className="relative size-7 text-white" />
         </button>

@@ -1,12 +1,27 @@
 'use client'
 
-import { ChevronRight, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { GlassCard } from './glass-card'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
 import { getIcon } from '@/lib/icons'
 import { getAccountTypeMeta } from '@/lib/catalog'
 import { fmt } from '@/lib/format'
+import type { Account } from '@/lib/types'
+
+function cardLabel(acc: Account): string {
+  const parts: string[] = []
+  if (acc.bank) parts.push(acc.bank)
+  if (acc.identifier) parts.push(`(${acc.identifier})`)
+  return parts.length > 0 ? parts.join(' ') : ''
+}
+
+function creditUtilization(acc: Account): string | null {
+  if (acc.type !== 'credito' || !acc.limiteCredito || acc.limiteCredito <= 0) return null
+  const used = Math.abs(acc.balance)
+  const pct = (used / acc.limiteCredito) * 100
+  return `${Math.round(pct)}% utilizado`
+}
 
 export function AccountsModule() {
   const { data } = useStore()
@@ -30,6 +45,8 @@ export function AccountsModule() {
           const Icon = getIcon(acc.icon)
           const meta = getAccountTypeMeta(acc.type)
           const isNegative = acc.balance < 0
+          const label = cardLabel(acc)
+          const util = creditUtilization(acc)
 
           return (
             <li
@@ -43,9 +60,21 @@ export function AccountsModule() {
               >
                 <Icon className="size-5 text-white" />
               </span>
-              <span className="min-w-0 flex-1 text-sm font-medium">
-                {acc.name}
-              </span>
+              <div className="min-w-0 flex-1">
+                <span className="block text-sm font-medium truncate">
+                  {acc.name}
+                </span>
+                {label && (
+                  <span className="block text-xs text-muted-foreground truncate">
+                    {label}
+                  </span>
+                )}
+                {util && (
+                  <span className="block text-[11px] text-muted-foreground/60">
+                    {util}
+                  </span>
+                )}
+              </div>
               <span className="text-right">
                 <span
                   className="block text-sm font-semibold tabular-nums"

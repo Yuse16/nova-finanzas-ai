@@ -1,6 +1,8 @@
 'use client'
 
 import { Bell, Layers } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { loadNotifications } from '@/lib/notifications'
 import { motion } from 'framer-motion'
 import { GlassCard } from './glass-card'
 import { useStore } from '@/lib/store'
@@ -10,7 +12,16 @@ import { fmt, fmtShort } from '@/lib/format'
 
 export function DashboardHeader() {
   const { data } = useStore()
-  const { open } = useUI() // NUEVO: Obtener la función open de useUI
+  const { open } = useUI()
+  const [unread, setUnread] = useState(0)
+
+  useEffect(() => {
+    const update = () => setUnread(loadNotifications().filter((n) => !n.read).length)
+    update()
+    window.addEventListener('nova-notifications-changed', update)
+    return () => window.removeEventListener('nova-notifications-changed', update)
+  }, [])
+
   const name = data.profile?.name ?? 'Usuario'
 
   // Calculate available balance (liquid accounts only)
@@ -53,11 +64,15 @@ export function DashboardHeader() {
         <button
           type="button"
           aria-label="Notificaciones"
-          onClick={() => open({ kind: 'notifications' })} // MODIFICADO: Abrir modal de notificaciones
+          onClick={() => open({ kind: 'notifications' })}
           className="glass relative grid size-12 shrink-0 place-items-center rounded-2xl active:scale-95 transition-transform"
         >
           <Bell className="size-5" />
-          <span className="absolute right-3 top-3 size-2 rounded-full bg-[var(--positive)]" />
+          {unread > 0 && (
+            <span className="absolute -right-1 -top-1 flex min-w-[20px] items-center justify-center rounded-full bg-[var(--negative)] px-1.5 py-0.5 text-[11px] font-bold leading-none text-white">
+              {unread > 99 ? '99+' : unread}
+            </span>
+          )}
         </button>
       </div>
 
