@@ -10,15 +10,60 @@ import { AiAssistant } from '@/components/ai-assistant'
 import { SectionHeader } from '@/components/section-header'
 import { voiceExamples } from '@/components/voice-experience'
 import { useUI } from '@/lib/ui-context'
+import { useStore } from '@/lib/store'
+import { getIcon } from '@/lib/icons'
+import { nextDueDate, daysUntil, urgentReminders } from '@/lib/calendar'
 
 export default function HomePage() {
-  const { openVoice } = useUI()
+  const { openVoice, open } = useUI()
+  const { data } = useStore()
+  const urgent = urgentReminders(data.reminders)
 
   return (
     <>
       <DashboardHeader />
       <QuickStats />
       <SpendingChart />
+
+      {urgent.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <SectionHeader title="Avisos" />
+          <div className="flex flex-col gap-2">
+            {urgent.map((r) => {
+              const Icon = getIcon(r.icon)
+              const days = daysUntil(nextDueDate(r))
+              const name = data.profile?.name
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => open({ kind: 'reminder', editing: r })}
+                  className="glass-strong flex items-center gap-3 rounded-3xl p-4 text-left transition-transform active:scale-[0.98]"
+                >
+                  <span
+                    className="grid size-12 shrink-0 place-items-center rounded-2xl"
+                    style={{ background: r.color }}
+                  >
+                    <Icon className="size-6 text-white" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold leading-tight">
+                      {days === 0
+                        ? `Hoy vence ${r.title}`
+                        : name
+                          ? `${name}, en ${days} días vence ${r.title}`
+                          : `En ${days} días vence ${r.title}`}
+                    </span>
+                    <span className="block text-sm text-muted-foreground">
+                      ${r.amount}
+                    </span>
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="flex flex-col gap-3">
         <SectionHeader title="Acciones rápidas" />

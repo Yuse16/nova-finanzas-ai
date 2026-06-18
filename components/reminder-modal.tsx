@@ -11,10 +11,15 @@ import { GlassSheet } from './ui/glass-sheet'
 import { Field, GlassInput, GlassButton, ChipSelect } from './ui/form-controls'
 
 const recurringOptions = [
-  { value: 'none' as const, label: 'No repetir' },
+  { value: 'none' as const, label: 'Una sola vez' },
   { value: 'weekly' as const, label: 'Semanal' },
-  { value: 'monthly' as const, label: 'Mensual' },
-  { value: 'yearly' as const, label: 'Anual' },
+  { value: 'monthly' as const, label: 'Cada mes' },
+  { value: 'yearly' as const, label: 'Una vez al año' },
+]
+
+const MONTHS = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
 
 export function ReminderModal() {
@@ -29,6 +34,9 @@ export function ReminderModal() {
   const [dueDate, setDueDate] = useState(todayISO())
   const [recurring, setRecurring] = useState<'none' | 'weekly' | 'monthly' | 'yearly'>('none')
   const [selectedIconIndex, setSelectedIconIndex] = useState(0)
+  const [monthlyDay, setMonthlyDay] = useState(1)
+  const [yearlyMonth, setYearlyMonth] = useState(1)
+  const [yearlyDay, setYearlyDay] = useState(1)
 
   useEffect(() => {
     if (!isOpen) return
@@ -39,17 +47,38 @@ export function ReminderModal() {
       setRecurring(editing.recurring)
       const idx = reminderIconOptions.findIndex((o) => o.icon === editing.icon)
       setSelectedIconIndex(idx >= 0 ? idx : 0)
+
+      const d = new Date(editing.dueDate + 'T00:00:00')
+      setMonthlyDay(d.getDate())
+      setYearlyMonth(d.getMonth() + 1)
+      setYearlyDay(d.getDate())
     } else {
       setTitle('')
       setAmountStr('')
       setDueDate(todayISO())
       setRecurring('none')
       setSelectedIconIndex(0)
+      const d = new Date(todayISO() + 'T00:00:00')
+      setMonthlyDay(d.getDate())
+      setYearlyMonth(d.getMonth() + 1)
+      setYearlyDay(d.getDate())
     }
   }, [isOpen, editing])
 
   const amountNum = Number.parseFloat(amountStr.replace(/,/g, '')) || 0
   const valid = title.trim().length > 0 && amountNum > 0 && dueDate.length > 0
+
+  function buildDueDate(): string {
+    if (recurring === 'monthly') {
+      const now = new Date()
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(monthlyDay).padStart(2, '0')}`
+    }
+    if (recurring === 'yearly') {
+      const now = new Date()
+      return `${now.getFullYear()}-${String(yearlyMonth).padStart(2, '0')}-${String(yearlyDay).padStart(2, '0')}`
+    }
+    return dueDate
+  }
 
   function save() {
     if (!valid) return
@@ -57,7 +86,7 @@ export function ReminderModal() {
     const baseData = {
       title: title.trim(),
       amount: amountNum,
-      dueDate,
+      dueDate: buildDueDate(),
       recurring,
       completed: editing ? editing.completed : false,
       icon: opt.icon,
@@ -125,7 +154,23 @@ export function ReminderModal() {
           </div>
         </Field>
 
-        <div className="grid grid-cols-1 gap-3">
+        <Field label="Repetición">
+          <ChipSelect
+            options={recurringOptions}
+            value={recurring}
+            onChange={(v) => {
+              setRecurring(v)
+              if (v === 'monthly' || v === 'yearly') {
+                const d = new Date(dueDate + 'T00:00:00')
+                setMonthlyDay(d.getDate())
+                setYearlyMonth(d.getMonth() + 1)
+                setYearlyDay(d.getDate())
+              }
+            }}
+          />
+        </Field>
+
+        {recurring === 'none' || recurring === 'weekly' ? (
           <Field label="Fecha de Vencimiento">
             <GlassInput
               type="date"
@@ -133,15 +178,48 @@ export function ReminderModal() {
               onChange={(e) => setDueDate(e.target.value)}
             />
           </Field>
-        </div>
-
-        <Field label="Repetición">
-          <ChipSelect
-            options={recurringOptions}
-            value={recurring}
-            onChange={(v) => setRecurring(v)}
-          />
-        </Field>
+        ) : recurring === 'monthly' ? (
+          <Field label="Día del Mes">
+            <GlassInput
+              type="number"
+              min={1}
+              max={31}
+              value={monthlyDay}
+              onChange={(e) => {
+                const v = Number.parseInt(e.target.value) || 1
+                setMonthlyDay(Math.max(1, Math.min(31, v)))
+              }}
+            />
+          </Field>
+        ) : recurring === 'yearly' ? (
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Mes">
+              <select
+                value={yearlyMonth}
+                onChange={(e) => setYearlyMonth(Number(e.target.value))}
+                className="w-full rounded-2xl bg-white/10 px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-white/30"
+              >
+                {MONTHS.map((name, i) => (
+                  <option key={i + 1} value={i + 1} className="text-black">
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Día">
+              <GlassInput
+                type="number"
+                min={1}
+                max={31}
+                value={yearlyDay}
+                onChange={(e) => {
+                  const v = Number.parseInt(e.target.value) || 1
+                  setYearlyDay(Math.max(1, Math.min(31, v)))
+                }}
+              />
+            </Field>
+          </div>
+        ) : null}
 
         <Field label="Icono y Color">
           <div className="flex flex-wrap gap-2 pt-1">

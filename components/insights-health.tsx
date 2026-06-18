@@ -13,7 +13,9 @@ import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
 import { isAccountLiability } from '@/lib/catalog'
 import { getIcon } from '@/lib/icons'
-import { fmt, fmtShort, relativeDue } from '@/lib/format'
+import { nextDueDate, daysUntil, predictiveMessages } from '@/lib/calendar'
+import { fmt, fmtShort } from '@/lib/format'
+import type { Reminder } from '@/lib/types'
 import { SectionHeader } from './section-header'
 
 const toneMap = {
@@ -316,6 +318,38 @@ export function RemindersModule() {
   const { data } = useStore()
   const { open } = useUI()
 
+  const messages = predictiveMessages(data.reminders, data.profile?.name)
+
+  function recLabel(r: Reminder): string {
+    if (r.recurring === 'monthly') {
+      const day = new Date(r.dueDate + 'T00:00:00').getDate()
+      return `Cada día ${day}`
+    }
+    if (r.recurring === 'yearly') {
+      const d = new Date(r.dueDate + 'T00:00:00')
+      const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+      return `Cada ${months[d.getMonth()]} ${d.getDate()}`
+    }
+    if (r.recurring === 'weekly') {
+      const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
+      return `Cada ${dias[new Date(r.dueDate + 'T00:00:00').getDay()]}`
+    }
+    return ''
+  }
+
+  function displayDue(r: Reminder): string {
+    const next = nextDueDate(r)
+    const days = daysUntil(next)
+    const rec = recLabel(r)
+
+    if (days < 0) {
+      return rec ? `${rec} · Venció hace ${Math.abs(days)} días` : `Venció hace ${Math.abs(days)} días`
+    }
+    if (days === 0) return rec ? `${rec} · Vence hoy` : 'Vence hoy'
+    if (days === 1) return rec ? `${rec} · Vence mañana` : 'Vence mañana'
+    return rec ? `${rec} · Vence en ${days} días` : `Vence en ${days} días`
+  }
+
   return (
     <GlassCard className="p-5">
       <div className="flex items-center justify-between">
@@ -328,10 +362,24 @@ export function RemindersModule() {
           Agregar
         </button>
       </div>
+
+      {messages.length > 0 && (
+        <div className="mt-4 flex flex-col gap-2">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className="rounded-2xl bg-[oklch(0.68_0.19_25/20%)] px-4 py-3 text-sm font-medium text-[oklch(0.9_0.06_25)]"
+            >
+              {msg}
+            </div>
+          ))}
+        </div>
+      )}
+
       <ul className="mt-4 flex flex-col">
         {data.reminders.map((r) => {
           const Icon = getIcon(r.icon)
-          const dueStr = relativeDue(r.dueDate)
+          const dueStr = displayDue(r)
 
           return (
             <li
