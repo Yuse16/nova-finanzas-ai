@@ -5,9 +5,9 @@ import { GlassSheet } from './ui/glass-sheet'
 import {
   TrendingDown,
   TrendingUp,
-  ArrowLeftRight,
-  HandCoins,
-  AlarmClock,
+  Plus,
+  Target,
+  Sparkles,
 } from 'lucide-react'
 
 export function QuickActionsModal() {
@@ -16,39 +16,39 @@ export function QuickActionsModal() {
 
   const options = [
     {
-      label: 'Nuevo Gasto',
+      label: 'Registrar gasto',
       icon: TrendingDown,
-      color: 'oklch(0.68 0.18 25)',
+      color: 'oklch(0.68 0.19 25)',
       onClick: () => open({ kind: 'transaction', preset: 'gasto' }),
     },
     {
-      label: 'Nuevo Ingreso',
+      label: 'Registrar ingreso',
       icon: TrendingUp,
       color: 'oklch(0.72 0.16 150)',
       onClick: () => open({ kind: 'transaction', preset: 'ingreso' }),
     },
     {
-      label: 'Nueva Transferencia',
-      icon: ArrowLeftRight,
-      color: 'oklch(0.78 0.16 70)',
-      onClick: () => open({ kind: 'transfer' }),
+      label: 'Agregar cuenta',
+      icon: Plus,
+      color: 'oklch(0.72 0.15 235)',
+      onClick: () => open({ kind: 'account' }),
     },
     {
-      label: 'Nueva Deuda',
-      icon: HandCoins,
-      color: 'oklch(0.7 0.18 295)',
-      onClick: () => open({ kind: 'transaction', preset: 'deuda' }),
+      label: 'Crear meta',
+      icon: Target,
+      color: 'oklch(0.78 0.16 120)',
+      onClick: () => open({ kind: 'goal' }),
     },
     {
-      label: 'Nuevo Recordatorio',
-      icon: AlarmClock,
-      color: 'oklch(0.72 0.15 255)',
-      onClick: () => open({ kind: 'reminder' }),
+      label: 'Hablar con Nova',
+      icon: Sparkles,
+      color: 'oklch(0.68 0.18 295)',
+      onClick: () => { close(); setTimeout(() => open({ kind: 'voice' }), 100) },
     },
   ]
 
   return (
-    <GlassSheet open={isOpen} onClose={close} title="Acciones Rápidas">
+    <GlassSheet open={isOpen} onClose={close} title="Abrir Nova">
       <div className="flex flex-col gap-3 pb-6">
         {options.map((opt) => (
           <button

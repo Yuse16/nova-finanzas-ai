@@ -90,6 +90,14 @@
   --fab-shadow: 0 8px 32px -8px oklch(0.25 0.10 290 / 35%);
   --fab-glow: 0 0 0 transparent;
 
+  --nova-crystal-bg: oklch(0.62 0.17 290 / 88%);
+  --nova-crystal-border: oklch(1 0 0 / 35%);
+  --nova-crystal-edge: oklch(1 0 0 / 55%);
+  --nova-crystal-shadow: 0 8px 32px -8px oklch(0.2 0.08 290 / 40%), inset 0 1px 0 0 oklch(1 0 0 / 40%);
+  --nova-crystal-glow: 0 0 0 transparent;
+  --nova-crystal-n: oklch(1 0 0 / 92%);
+  --nova-crystal-dot: oklch(0.82 0.17 155 / 90%);
+
   --primary-btn-bg: oklch(0.62 0.17 290);
   --primary-btn-shadow: 0 8px 24px -8px oklch(0.25 0.10 290 / 35%);
   --danger-btn-bg: oklch(0.62 0.2 18);
@@ -148,6 +156,14 @@ html[data-theme="dark"] {
   --fab-pulse: oklch(0.72 0.18 275);
   --fab-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
   --fab-glow: 0 0 28px oklch(0.65 0.18 280 / 45%);
+
+  --nova-crystal-bg: oklch(0.65 0.18 280 / 88%);
+  --nova-crystal-border: oklch(1 0 0 / 25%);
+  --nova-crystal-edge: oklch(1 0 0 / 40%);
+  --nova-crystal-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 oklch(1 0 0 / 30%);
+  --nova-crystal-glow: 0 0 28px oklch(0.65 0.18 280 / 40%);
+  --nova-crystal-n: oklch(1 0 0 / 95%);
+  --nova-crystal-dot: oklch(0.82 0.17 155 / 90%);
 
   --primary-btn-bg: oklch(0.65 0.18 280);
   --primary-btn-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
@@ -252,5 +268,46 @@ html[data-theme="dark"] {
   }
   50% {
     transform: translateY(-6px);
+  }
+}
+
+@keyframes nova-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes nova-shimmer {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%) skewX(-20deg);
+  }
+  30% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(200%) skewX(-20deg);
+  }
+}
+
+@keyframes nova-expand {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.92);
+  }
+  70% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
   }
 }

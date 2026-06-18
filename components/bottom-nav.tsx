@@ -1,9 +1,10 @@
 'use client'
 
-import { Home, ArrowLeftRight, Wallet, Menu, Plus } from 'lucide-react'
+import { Home, ArrowLeftRight, Wallet, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUI } from '@/lib/ui-context'
+import { NovaCrystal } from './nova-crystal'
 
 const items = [
   { label: 'Inicio', icon: Home, href: '/' },
@@ -38,22 +39,7 @@ export function BottomNav() {
           ))}
         </div>
 
-        <button
-          type="button"
-          onClick={() => open({ kind: 'quick-actions' })}
-          aria-label="Acción rápida"
-          className="relative -mt-8 grid size-16 shrink-0 place-items-center rounded-full transition-transform active:scale-95"
-          style={{
-            background: 'var(--fab-bg)',
-            boxShadow: 'var(--fab-shadow), var(--fab-glow)',
-          }}
-        >
-          <span
-            className="absolute size-16 rounded-full"
-            style={{ background: 'var(--fab-pulse)', animation: 'nova-pulse 2.4s ease-out infinite' }}
-          />
-          <Plus className="relative size-7 text-white" />
-        </button>
+        <NovaCrystal onClick={() => open({ kind: 'quick-actions' })} />
 
         <div className="flex flex-1 justify-around">
           {rightItems.map((it) => (
