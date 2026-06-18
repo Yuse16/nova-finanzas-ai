@@ -1,4 +1,4 @@
-import type { AccountType, Method, MovementType } from './types'
+import type { Account, AccountType, Method, MovementType } from './types'
 
 // ---- Account type metadata ------------------------------------------------
 
@@ -68,10 +68,23 @@ export const accountTypes: AccountTypeMeta[] = [
     liability: true,
     method: 'Otro',
   },
+  {
+    type: 'personalizada',
+    label: 'Personalizada',
+    caption: 'Cuenta personalizada',
+    icon: 'wallet',
+    color: 'oklch(0.7 0.16 255)',
+    liability: false,
+    method: 'Otro',
+  },
 ]
 
 export function getAccountTypeMeta(type: AccountType): AccountTypeMeta {
   return accountTypes.find((a) => a.type === type) ?? accountTypes[0]
+}
+
+export function isAccountLiability(account: Account): boolean {
+  return account.isLiability ?? getAccountTypeMeta(account.type).liability
 }
 
 // ---- Spending categories --------------------------------------------------

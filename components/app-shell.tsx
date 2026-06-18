@@ -23,6 +23,7 @@ import { SearchModal } from './search-modal'
 import { FiltersModal } from './filters-modal'
 import { NotificationsModal } from './notifications-modal'
 import { BalanceDetailModal } from './balance-detail-modal'
+import { ResetFinancialModal } from './reset-financial-modal'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, ready } = useStore()
@@ -78,6 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <FiltersModal />
         <NotificationsModal />
         <BalanceDetailModal />
+        <ResetFinancialModal />
 
         <VoiceExperience open={voiceOpen} onClose={closeVoice} />
       </div>

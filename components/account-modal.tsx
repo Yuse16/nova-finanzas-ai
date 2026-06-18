@@ -13,10 +13,11 @@ import {
   GlassButton,
   ChipSelect,
 } from './ui/form-controls'
+import { CustomAccountFields } from './custom-account-fields'
 
 const typeOptions = accountTypes.map((t) => ({
   value: t.type,
-  label: t.label,
+  label: t.type === 'personalizada' ? 'Otro' : t.label,
 }))
 
 export function AccountModal() {
@@ -29,18 +30,28 @@ export function AccountModal() {
   const [name, setName] = useState('')
   const [type, setType] = useState<AccountType>('efectivo')
   const [balanceStr, setBalanceStr] = useState('')
+  const [selectedIcon, setSelectedIcon] = useState('wallet')
+  const [selectedColor, setSelectedColor] = useState('oklch(0.72 0.16 150)')
+  const [localIsLiability, setLocalIsLiability] = useState(false)
 
   useEffect(() => {
     if (!isOpen) return
     if (editing) {
       setName(editing.name)
       setType(editing.type)
-      // Display absolute balance on input
       setBalanceStr(String(Math.abs(editing.balance)))
+      setSelectedIcon(editing.icon)
+      setSelectedColor(editing.color)
+      if (editing.type === 'personalizada') {
+        setLocalIsLiability(editing.isLiability ?? false)
+      }
     } else {
       setName('')
       setType('efectivo')
       setBalanceStr('')
+      setSelectedIcon('wallet')
+      setSelectedColor('oklch(0.72 0.16 150)')
+      setLocalIsLiability(false)
     }
   }, [isOpen, editing])
 
@@ -49,22 +60,20 @@ export function AccountModal() {
 
   function save() {
     if (!valid) return
-    const meta = getAccountTypeMeta(type)
-    const storedBalance = meta.liability ? -balanceNum : balanceNum
+    const isLiability = type === 'personalizada' ? localIsLiability : getAccountTypeMeta(type).liability
+    const storedBalance = isLiability ? -balanceNum : balanceNum
 
     const baseData = {
       name: name.trim(),
       type,
       balance: storedBalance,
-      icon: meta.icon,
-      color: meta.color,
+      icon: type === 'personalizada' ? selectedIcon : getAccountTypeMeta(type).icon,
+      color: type === 'personalizada' ? selectedColor : getAccountTypeMeta(type).color,
+      ...(type === 'personalizada' ? { isLiability: localIsLiability } : {}),
     }
 
     if (editing) {
-      updateAccount({
-        ...editing,
-        ...baseData,
-      })
+      updateAccount({ ...editing, ...baseData })
     } else {
       addAccount(baseData)
     }
@@ -101,7 +110,7 @@ export function AccountModal() {
           <GlassInput
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ej. Mi Efectivo, Nómina Bancomer..."
+            placeholder={type === 'personalizada' ? 'Ej. Mi Wallet Cripto' : 'Ej. Mi Efectivo, Nómina Bancomer...'}
             autoFocus={!editing}
           />
         </Field>
@@ -112,14 +121,28 @@ export function AccountModal() {
             value={type}
             onChange={(v) => {
               setType(v)
-              // Auto fill default name if name is empty or matched a default
               const currentMeta = getAccountTypeMeta(type)
               if (!name || name === currentMeta.label) {
                 setName(getAccountTypeMeta(v).label)
               }
+              if (v !== 'personalizada') {
+                setSelectedIcon(getAccountTypeMeta(v).icon)
+                setSelectedColor(getAccountTypeMeta(v).color)
+              }
             }}
           />
         </Field>
+
+        {type === 'personalizada' && (
+          <CustomAccountFields
+            selectedIcon={selectedIcon}
+            onIconChange={setSelectedIcon}
+            selectedColor={selectedColor}
+            onColorChange={setSelectedColor}
+            isLiability={localIsLiability}
+            onLiabilityChange={setLocalIsLiability}
+          />
+        )}
 
         <Field label="Saldo Inicial / Actual">
           <div className="relative">

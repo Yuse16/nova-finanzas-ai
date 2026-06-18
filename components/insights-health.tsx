@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 import { GlassCard } from './glass-card'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
+import { isAccountLiability } from '@/lib/catalog'
 import { getIcon } from '@/lib/icons'
 import { fmt, fmtShort, relativeDue } from '@/lib/format'
 import { SectionHeader } from './section-header'
@@ -41,12 +42,12 @@ export function SmartInsights() {
     .reduce((sum, m) => sum + m.amount, 0)
 
   const assets = data.accounts
-    .filter((a) => a.type !== 'credito' && a.type !== 'deudas')
+    .filter((a) => !isAccountLiability(a))
     .reduce((sum, a) => sum + a.balance, 0)
 
   const debts = Math.abs(
     data.accounts
-      .filter((a) => a.type === 'credito' || a.type === 'deudas')
+      .filter((a) => isAccountLiability(a))
       .reduce((sum, a) => sum + a.balance, 0)
   )
 
@@ -136,12 +137,12 @@ export function HealthScore() {
 
   // Calculate dynamic health score
   const assets = data.accounts
-    .filter((a) => a.type !== 'credito' && a.type !== 'deudas')
+    .filter((a) => !isAccountLiability(a))
     .reduce((sum, a) => sum + a.balance, 0)
 
   const debts = Math.abs(
     data.accounts
-      .filter((a) => a.type === 'credito' || a.type === 'deudas')
+      .filter((a) => isAccountLiability(a))
       .reduce((sum, a) => sum + a.balance, 0)
   )
 
@@ -160,7 +161,7 @@ export function HealthScore() {
     .reduce((sum, m) => sum + m.amount, 0)
 
   const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : 0
-  const debtRatio = assets > 0 ? (debts / assets) * 100 : 0
+  const debtRatio = assets > 0 ? (debts / assets) * 100 : debts > 0 ? 100 : 0
   const emergencyFundWeeks = expenses > 0 ? (assets / (expenses / 4)) : 12 // assume 12 weeks default
 
   // Factors (0 to 100)
@@ -173,7 +174,7 @@ export function HealthScore() {
 
   const factors = [
     { label: 'Tasa de ahorro', value: savingsFactor },
-    { label: 'Nivel de deuda', value: debtFactor },
+    { label: 'Salud de deuda', value: debtFactor },
     { label: 'Hábitos de gasto', value: spendingFactor },
     { label: 'Fondo de emergencia', value: emergencyFactor },
   ]

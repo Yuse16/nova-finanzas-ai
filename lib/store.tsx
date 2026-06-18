@@ -9,9 +9,11 @@ import type {
   Reminder,
   UserProfile,
   AssistantMessage,
+  FinancialSnapshot,
 } from './types' // NEW: Import AssistantMessage
 import { emptyAppData } from './types'
 import { storage } from './storage'
+import { snapshotStorage } from './storage-snapshots'
 import { uid } from './format'
 import { getAccountTypeMeta, methodToAccountType } from './catalog'
 
@@ -96,6 +98,7 @@ export type StoreValue = {
   // onboarding
   completeOnboarding: (profile: UserProfile, accounts: Account[]) => void
   reset: () => void
+  resetWithSnapshot: (snapshot: FinancialSnapshot) => void
   // method -> account resolution
   resolveAccountIdByMethod: (method: string) => string | null
   // NEW: Assistant History
@@ -309,6 +312,13 @@ export const useStore = create<StoreValue>((set, get) => ({
   reset: () => {
     storage.clear()
     set({ data: emptyAppData() })
+  },
+
+  resetWithSnapshot: (snapshot) => {
+    snapshotStorage.saveSnapshot(snapshot).then(() => {
+      storage.clear()
+      set({ data: emptyAppData(), ready: true })
+    })
   },
 
   resolveAccountIdByMethod: (method) => {

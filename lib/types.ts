@@ -9,6 +9,7 @@ export type AccountType =
   | 'ahorro'
   | 'inversion'
   | 'deudas'
+  | 'personalizada'
 
 export type MovementType =
   | 'gasto'
@@ -37,6 +38,7 @@ export type Account = {
   /** Icon key resolved against the icon registry at render time. */
   icon: string
   color: string
+  isLiability?: boolean
   createdAt: number
   updatedAt: number
 }
@@ -124,6 +126,26 @@ export type AppData = {
 }
 
 export const CURRENT_DATA_VERSION = 1
+
+export type FinancialSnapshot = {
+  id: string
+  createdAt: number
+  label: string
+  summary: {
+    availableBalance: number
+    totalDebt: number
+    movementsCount: number
+    goalsCount: number
+  }
+  fullData: {
+    accounts: Account[]
+    movements: Movement[]
+    goals: Goal[]
+    reminders: Reminder[]
+    assistantHistory: AssistantMessage[]
+    profile: UserProfile | null
+  }
+}
 
 export function emptyAppData(): AppData {
   return {

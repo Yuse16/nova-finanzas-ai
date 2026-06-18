@@ -2,11 +2,13 @@
 
 import { useUI } from '@/lib/ui-context'
 import { GlassSheet } from './ui/glass-sheet'
-import { Settings, AlarmClock, Target, Sparkles } from 'lucide-react'
+import { Settings, AlarmClock, Target, Sparkles, History } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export function MoreOptionsModal() {
   const { modal, open, close } = useUI()
   const isOpen = modal.kind === 'more-options'
+  const router = useRouter()
 
   const options = [
     {
@@ -37,6 +39,15 @@ export function MoreOptionsModal() {
       action: () => {
         close()
         open({ kind: 'assistant' })
+      },
+    },
+    {
+      label: 'Historial de cierres',
+      icon: History,
+      color: 'oklch(0.65 0.14 260)',
+      action: () => {
+        close()
+        router.push('/historial')
       },
     },
   ]

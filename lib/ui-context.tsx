@@ -29,6 +29,7 @@ type ModalState =
   | { kind: 'quick-actions' }
   | { kind: 'more-options' }
   | { kind: 'balance-detail' }
+  | { kind: 'reset-financial' }
 
 type UIValue = {
   modal: ModalState

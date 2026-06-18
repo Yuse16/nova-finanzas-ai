@@ -3,7 +3,7 @@
 import { useUI } from '@/lib/ui-context'
 import { useStore } from '@/lib/store'
 import { GlassSheet } from './ui/glass-sheet'
-import { getAccountTypeMeta } from '@/lib/catalog'
+import { getAccountTypeMeta, isAccountLiability } from '@/lib/catalog'
 import { fmt } from '@/lib/format'
 
 export function BalanceDetailModal() {
@@ -11,8 +11,8 @@ export function BalanceDetailModal() {
   const { data } = useStore()
   const isOpen = modal.kind === 'balance-detail'
 
-  const liquidAccounts = data.accounts.filter((a) => !getAccountTypeMeta(a.type).liability)
-  const liabilityAccounts = data.accounts.filter((a) => getAccountTypeMeta(a.type).liability)
+  const liquidAccounts = data.accounts.filter((a) => !isAccountLiability(a))
+  const liabilityAccounts = data.accounts.filter((a) => isAccountLiability(a))
 
   const availableBalance = liquidAccounts.reduce((s, a) => s + a.balance, 0)
   const totalLiability = liabilityAccounts.reduce((s, a) => s + a.balance, 0)

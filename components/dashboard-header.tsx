@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { GlassCard } from './glass-card'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context' // NUEVA IMPORTACIÓN
-import { getAccountTypeMeta } from '@/lib/catalog'
+import { getAccountTypeMeta, isAccountLiability } from '@/lib/catalog'
 import { fmt, fmtShort } from '@/lib/format'
 
 export function DashboardHeader() {
@@ -15,7 +15,7 @@ export function DashboardHeader() {
 
   // Calculate available balance (liquid accounts only)
   const availableBalance = data.accounts
-    .filter((a) => !getAccountTypeMeta(a.type).liability)
+    .filter((a) => !isAccountLiability(a))
     .reduce((sum, acc) => sum + acc.balance, 0)
 
   // Calculate total balance (all accounts, including liabilities stored as negative)

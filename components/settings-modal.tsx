@@ -6,7 +6,7 @@ import { useStore } from '@/lib/store' // NEW: Import useStore
 import { availableFonts } from '@/lib/types' // NEW: Import availableFonts
 
 export function SettingsModal() {
-  const { modal, close } = useUI()
+  const { modal, open, close } = useUI()
   const isOpen = modal.kind === 'settings'
 
   // NEW: Access font state and action
@@ -40,6 +40,20 @@ export function SettingsModal() {
             </label>
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-col gap-4 border-t border-white/10 p-4 text-left">
+        <h3 className="text-xl font-semibold text-[oklch(0.7_0.2_25)]">Peligro</h3>
+        <button
+          type="button"
+          onClick={() => {
+            close()
+            open({ kind: 'reset-financial' })
+          }}
+          className="flex items-center gap-3 rounded-2xl border border-[oklch(0.6_0.25_25/30%)] p-4 text-left text-sm font-semibold text-[oklch(0.7_0.2_25)] active:scale-[0.98]"
+        >
+          Reiniciar finanzas
+        </button>
       </div>
     </GlassSheet>
   )
