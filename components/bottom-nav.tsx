@@ -1,10 +1,9 @@
 'use client'
 
-import { Home, ArrowLeftRight, Wallet, Menu } from 'lucide-react'
+import { Home, ArrowLeftRight, Wallet, Menu, Diamond } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUI } from '@/lib/ui-context'
-import { NovaCrystal } from './nova-crystal'
 
 const items = [
   { label: 'Inicio', icon: Home, href: '/' },
@@ -23,7 +22,7 @@ export function BottomNav() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-      <nav className="glass-strong pointer-events-auto relative mx-4 flex w-full max-w-md items-center justify-between rounded-3xl px-6 py-3">
+      <nav className="glass-strong pointer-events-auto relative mx-4 flex w-full max-w-md items-center justify-between rounded-3xl px-6 py-3" style={{ background: 'rgba(255,255,255,0.85)' }}>
         <div className="flex flex-1 justify-around">
           {items.map((it) => (
             <Link
@@ -39,7 +38,18 @@ export function BottomNav() {
           ))}
         </div>
 
-        <NovaCrystal onClick={() => open({ kind: 'quick-actions' })} />
+        <button
+          type="button"
+          onClick={() => open({ kind: 'quick-actions' })}
+          aria-label="Abrir Nova"
+          className="relative -mt-8 grid size-14 shrink-0 place-items-center rounded-full outline-none"
+          style={{
+            background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
+            boxShadow: '0 4px 20px rgba(59, 130, 246, 0.4)',
+          }}
+        >
+          <Diamond size={24} strokeWidth={1.5} className="text-white" />
+        </button>
 
         <div className="flex flex-1 justify-around">
           {rightItems.map((it) => (

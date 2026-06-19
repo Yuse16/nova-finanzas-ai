@@ -50,8 +50,8 @@
   color-scheme: light;
   --radius: 1.25rem;
 
-  --background: oklch(0.62 0.13 250);
-  --foreground: oklch(0.99 0.01 250);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.15 0.01 250);
   --card: oklch(1 0 0 / 14%);
   --card-foreground: oklch(0.99 0.01 250);
   --popover: oklch(0.55 0.12 255 / 72%);
@@ -205,7 +205,7 @@ html[data-theme="dark"] {
   }
   body {
     @apply text-foreground;
-    background: linear-gradient(180deg, oklch(0.30 0.10 260) 0%, oklch(0.42 0.12 260) 50%, oklch(0.40 0.14 275) 100%);
+    background: white;
     background-attachment: fixed;
   }
   html {
