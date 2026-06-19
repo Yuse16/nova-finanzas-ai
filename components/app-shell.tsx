@@ -15,6 +15,7 @@ import { TransactionModal } from './transaction-modal'
 import { TransferModal } from './transfer-modal'
 import { QuickActionsModal } from './quick-actions-modal'
 import { AccountModal } from './account-modal'
+import { AccountDetailModal } from './account-detail-modal'
 import { GoalModal } from './goal-modal'
 import { ReminderModal } from './reminder-modal'
 import { MoreOptionsModal } from './more-options-modal'
@@ -67,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="relative min-h-screen overflow-x-hidden"
         style={{ paddingTop: 'var(--sat)', minHeight: 'calc(100vh - var(--sat) - var(--sab))' }}
       >
-        {pathname !== '/' && (
+        {pathname !== '/' && pathname !== '/movimientos' && pathname !== '/cuentas' && (
           <div className="fixed inset-0 -z-10" style={{ backgroundImage: 'var(--bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}>
             <div className="absolute inset-0" style={{ background: 'var(--bg-overlay)' }} />
           </div>
@@ -83,6 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <TransferModal />
         <QuickActionsModal />
         <AccountModal />
+        <AccountDetailModal />
         <GoalModal />
         <ReminderModal />
         <MoreOptionsModal />

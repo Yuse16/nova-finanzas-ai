@@ -6,7 +6,9 @@ import { Mic, Check, X, ArrowDownLeft, ArrowUpRight, HandCoins } from 'lucide-re
 import { parseVoice, type ParsedMovement } from '@/lib/parse-voice'
 import { fmt } from '@/lib/format'
 import { useStore } from '@/lib/store'
-import { useSpeechRecognition, type VoiceStatus } from '@/hooks/use-speech-recognition' // NEW: Import useSpeechRecognition hook
+import { getIcon } from '@/lib/icons'
+import { getAccountTypeMeta, methodToAccountType } from '@/lib/catalog'
+import { useSpeechRecognition, type VoiceStatus } from '@/hooks/use-speech-recognition'
 
 export const voiceExamples = [
   'Gasté 150 en tacos',
@@ -14,8 +16,6 @@ export const voiceExamples = [
   'Pagué internet',
   'Le presté 500 a Juan',
 ]
-
-const methods = ['Efectivo', 'Débito', 'Crédito', 'Ahorro', 'Inversión', 'Otro']
 
 type Phase = 'listening' | 'confirm' | 'saved' | 'error' | 'unsupported'
 
@@ -51,12 +51,9 @@ export function VoiceExperience({
 }) {
   const [phase, setPhase] = useState<Phase>('listening')
   const [parsed, setParsed] = useState<ParsedMovement | null>(null)
-  const [method, setMethod] = useState<string | null>(null)
+  const [accountId, setAccountId] = useState<string | null>(null)
+  const data = useStore((s) => s.data)
   const addMovement = useStore((s) => s.addMovement)
-
-  const resolveAccountIdByMethod = useStore(
-    (s) => s.resolveAccountIdByMethod
-  )
 
   // NEW: Use the speech recognition hook
   const { supported, status, transcript, error, start, stop, reset } = useSpeechRecognition()
@@ -71,7 +68,7 @@ export function VoiceExperience({
 
     setPhase('listening')
     setParsed(null)
-    setMethod(null)
+    setAccountId(null)
     reset() // Reset speech recognition state
     start() // Start listening
 
@@ -107,10 +104,15 @@ export function VoiceExperience({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, transcript, phase])
 
-  function confirm(m: string) {
+  function confirm(id: string) {
     if (!parsed) return
-  
-    const accountId = resolveAccountIdByMethod(m)
+
+    const acc = data.accounts.find((a) => a.id === id)
+    if (!acc) return
+
+    const m = Object.entries(methodToAccountType).find(
+      ([, v]) => v === acc.type,
+    )?.[0] ?? 'Otro'
   
     addMovement({
       title: parsed.title || 'Movimiento por voz',
@@ -122,7 +124,7 @@ export function VoiceExperience({
           : parsed.type === 'deuda'
           ? 'deuda'
           : 'gasto',
-      accountId,
+      accountId: id,
       toAccountId: null,
       method: m,
       date: new Date().toISOString(),
@@ -135,13 +137,13 @@ export function VoiceExperience({
           : parsed.type === 'deuda'
           ? '#f59e0b'
           : '#ef4444',
-    }) 
-    setMethod(m)
+    })
+    setAccountId(id)
     setPhase('saved')
   
     setTimeout(() => {
       onClose()
-    }, 1400) // Give user time to see 'saved' state
+    }, 1400)
   }
 
   const typeMeta =
@@ -273,19 +275,42 @@ export function VoiceExperience({
 
                   <div className="border-t border-white/15 pt-4">
                     <p className="text-base font-medium">
-                      ¿Qué método utilizaste?
+                      ¿Con qué cuenta?
                     </p>
-                    <div className="mt-3 grid grid-cols-3 gap-2">
-                      {methods.map((m) => (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => confirm(m)}
-                          className="glass-subtle rounded-2xl py-3 text-sm font-medium transition-transform active:scale-95"
-                        >
-                          {m}
-                        </button>
-                      ))}
+                    <div className="mt-3 flex flex-col gap-1.5">
+                      {data.accounts.map((acc) => {
+                        const Icon = getIcon(acc.icon)
+                        const meta = getAccountTypeMeta(acc.type)
+                        const selected = accountId === acc.id
+                        return (
+                          <button
+                            key={acc.id}
+                            type="button"
+                            onClick={() => confirm(acc.id)}
+                            className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all active:scale-[0.98] ${
+                              selected
+                                ? 'bg-white/20 shadow-sm ring-1 ring-white/30'
+                                : 'glass-subtle'
+                            }`}
+                          >
+                            <span
+                              className="grid size-9 shrink-0 place-items-center rounded-xl"
+                              style={{ background: acc.color || meta.color }}
+                            >
+                              <Icon className="size-4 text-white" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-foreground">
+                                {acc.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {meta.caption}
+                              </p>
+                            </div>
+                            {selected && <Check className="size-4 text-[var(--positive)]" />}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 </motion.div>
@@ -309,7 +334,7 @@ export function VoiceExperience({
                   </motion.div>
                   <p className="text-lg font-semibold">Movimiento guardado</p>
                   <p className="text-center text-sm text-muted-foreground text-balance">
-                    {parsed.title} · {fmt(parsed.amount)} · {method}
+                    {parsed.title} · {fmt(parsed.amount)} · {data.accounts.find((a) => a.id === accountId)?.name ?? ''}
                   </p>
                 </motion.div>
               )}

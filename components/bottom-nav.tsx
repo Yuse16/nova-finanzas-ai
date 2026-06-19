@@ -29,7 +29,7 @@ export function BottomNav() {
               key={it.label}
               href={it.href}
               className={`flex flex-col items-center gap-1 text-[11px] ${
-                isActive(it.href) ? 'text-foreground' : 'text-muted-foreground'
+                isActive(it.href) ? 'text-foreground' : 'text-gray-400'
               }`}
             >
               <it.icon className="size-5" />
@@ -57,7 +57,7 @@ export function BottomNav() {
               key={it.label}
               href={it.href}
               className={`flex flex-col items-center gap-1 text-[11px] ${
-                isActive(it.href) ? 'text-foreground' : 'text-muted-foreground'
+                isActive(it.href) ? 'text-foreground' : 'text-gray-400'
               }`}
             >
               <it.icon className="size-5" />
@@ -67,7 +67,7 @@ export function BottomNav() {
           <button
             type="button"
             onClick={() => open({ kind: 'more-options' })}
-            className="flex flex-col items-center gap-1 text-[11px] text-muted-foreground"
+            className="flex flex-col items-center gap-1 text-[11px] text-gray-400"
           >
             <Menu className="size-5" />
             Más

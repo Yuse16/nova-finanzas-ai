@@ -15,7 +15,7 @@ export default function HomePage() {
     <div className="flex flex-col">
       <HomeHero data={data} onBellClick={() => open({ kind: 'notifications' })} />
 
-      <div className="flex flex-col bg-gray-50 min-h-screen pb-32 pt-4">
+      <div className="flex flex-col bg-gray-50 min-h-screen pb-32 pt-5">
         <HomeAccountCard />
         <HomeGoalCard />
         <HomeQuickStats />

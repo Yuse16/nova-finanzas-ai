@@ -15,7 +15,7 @@ import { emptyAppData } from './types'
 import { storage } from './storage'
 import { snapshotStorage } from './storage-snapshots'
 import { uid } from './format'
-import { getAccountTypeMeta, methodToAccountType } from './catalog'
+import { getAccountTypeMeta } from './catalog'
 
 // ---- Balance side-effects -------------------------------------------------
 
@@ -99,8 +99,6 @@ export type StoreValue = {
   completeOnboarding: (profile: UserProfile, accounts: Account[]) => void
   reset: () => void
   resetWithSnapshot: (snapshot: FinancialSnapshot) => void
-  // method -> account resolution
-  resolveAccountIdByMethod: (method: string) => string | null
   // NEW: Assistant History
   addAssistantMessage: (message: Omit<AssistantMessage, 'id' | 'createdAt'>) => void;
 }
@@ -319,16 +317,6 @@ export const useStore = create<StoreValue>((set, get) => ({
       storage.clear()
       set({ data: emptyAppData(), ready: true })
     })
-  },
-
-  resolveAccountIdByMethod: (method) => {
-    const { data } = get()
-    const type = methodToAccountType[method]
-    if (type) {
-      const match = data.accounts.find((a) => a.type === type)
-      if (match) return match.id
-    }
-    return data.accounts[0]?.id ?? null
   },
 
   // NEW: Assistant History Actions

@@ -47,13 +47,13 @@ export function HomeHero({
     <section className="relative h-[40vh] min-h-[280px] w-screen overflow-hidden -mt-6 left-1/2 -translate-x-1/2">
       <div className="absolute inset-0">
         <Image
-          src="/montana.webp"
+          src="/montanav2.webp"
           alt=""
           fill
           priority
           aria-hidden
           className="object-cover"
-          style={{ objectPosition: 'center 60%' }}
+          style={{ objectPosition: 'center 30%' }}
           sizes="100vw"
         />
       </div>
@@ -65,7 +65,7 @@ export function HomeHero({
         }}
       />
 
-      <div className="absolute right-5 top-5 z-10">
+      <div className="absolute right-5 top-9 z-10">
         <button
           type="button"
           aria-label="Notificaciones"
@@ -81,7 +81,7 @@ export function HomeHero({
         </button>
       </div>
 
-      <div className="absolute bottom-12 left-5 z-10">
+      <div className="absolute bottom-20 left-5 z-10">
         <p className="text-lg font-light text-gray-800">
           Hola, {name} 👋
         </p>

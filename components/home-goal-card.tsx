@@ -34,7 +34,7 @@ export function HomeGoalCard() {
     const remaining = Math.max(main.target - main.saved, 0)
 
     return (
-      <section className="rounded-2xl bg-white px-5 pt-5 pb-2 shadow-sm mx-4 mb-4">
+      <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm mx-4 mb-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900">Metas</h2>
           <div className="flex items-center gap-3">
@@ -43,7 +43,7 @@ export function HomeGoalCard() {
           </div>
         </div>
         <Link href="/metas" className="block border-b border-gray-50 last:border-b-0">
-          <div className="py-4">
+          <div className="py-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-base font-semibold text-gray-900">{main.title}</p>
@@ -69,12 +69,12 @@ export function HomeGoalCard() {
   const tip = consejos[tipIndex]
 
   return (
-    <section className="rounded-2xl bg-white px-5 pt-5 pb-2 shadow-sm mx-4 mb-4">
+    <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm mx-4 mb-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">Metas</h2>
         <button type="button" onClick={() => open({ kind: 'goal' })} className="text-sm font-semibold text-blue-500">+ Nueva meta</button>
       </div>
-      <div className="border-b border-gray-50 last:border-b-0 py-4">
+      <div className="border-b border-gray-50 last:border-b-0 py-3">
         <div className="flex gap-3">
           <Lightbulb className="mt-0.5 size-4 shrink-0 text-blue-400" />
           <div>

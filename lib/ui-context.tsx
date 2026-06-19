@@ -16,6 +16,7 @@ type ModalState =
   | { kind: 'transaction'; preset?: MovementType; editing?: Movement; parsed?: Partial<Movement> & { person?: string } }
   | { kind: 'transfer' }
   | { kind: 'account'; editing?: Account }
+  | { kind: 'account-detail'; account: Account }
   | { kind: 'goal'; editing?: Goal }
   | { kind: 'goal-money'; goal: Goal }
   | { kind: 'reminder'; editing?: Reminder }
