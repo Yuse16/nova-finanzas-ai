@@ -160,7 +160,7 @@ export function TransactionModal() {
           </Field>
 
           <div>
-            <p className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+            <p className="mb-2 text-sm font-medium text-gray-600 dark:text-gray-300">
               Monto
             </p>
             <div className="flex items-center rounded-2xl bg-white/40 px-5 py-4 backdrop-blur-sm ring-1 ring-white/30 transition-all focus-within:ring-2 focus-within:ring-[var(--ring)] dark:bg-white/[0.06] dark:ring-white/10 dark:focus-within:ring-white/30">
@@ -233,14 +233,16 @@ export function TransactionModal() {
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
                       {selectedAccount.name}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {getAccountTypeMeta(selectedAccount.type).caption}
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {selectedAccount.bank
+                        ? `${getAccountTypeMeta(selectedAccount.type).label} · ${selectedAccount.bank}`
+                        : getAccountTypeMeta(selectedAccount.type).caption}
                     </p>
                   </div>
                 </>
               ) : (
                 <div className="flex-1 py-1 text-left">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Seleccionar cuenta
                   </p>
                 </div>
@@ -333,8 +335,10 @@ export function TransactionModal() {
                           <p className="text-sm font-semibold text-gray-900 dark:text-white">
                             {acc.name}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {meta.caption}
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {acc.bank && (acc.type === 'credito' || acc.type === 'debito')
+                              ? `${meta.label} · ${acc.bank}${acc.identifier ? ` ${acc.identifier}` : ''}`
+                              : meta.label}
                           </p>
                         </div>
                         {selected && (

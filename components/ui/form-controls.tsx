@@ -14,9 +14,15 @@ export function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+        {label}
+      </span>
       {children}
-      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+      {hint && (
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {hint}
+        </span>
+      )}
     </label>
   )
 }
@@ -28,7 +34,7 @@ export function GlassInput({
   return (
     <input
       className={cn(
-        'glass-subtle w-full rounded-2xl px-4 py-3 text-base font-medium text-foreground placeholder:text-muted-foreground/70 outline-none focus:ring-2 focus:ring-[var(--ring)]',
+        'glass-subtle w-full rounded-2xl px-4 py-3 text-base font-medium text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[var(--ring)] dark:text-white dark:placeholder:text-gray-500',
         className,
       )}
       {...props}
@@ -88,7 +94,7 @@ export function ChipSelect<T extends string>({
               'rounded-full px-4 py-2 text-sm font-medium transition-colors',
               active
                 ? 'bg-white/85 text-[oklch(0.45_0.1_255)]'
-                : 'glass-subtle text-foreground',
+                : 'glass-subtle text-gray-700 dark:text-gray-200',
             )}
           >
             {o.label}
