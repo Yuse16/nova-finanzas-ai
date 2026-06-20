@@ -70,17 +70,43 @@ export function TransactionModal() {
       setCategory(parsed?.category ?? (t === 'ingreso' ? 'Ingreso' : 'General'))
       const m = (parsed?.method as Method) ?? 'Efectivo'
       setMethod(m)
+      const validForType = data.accounts.filter((a) => {
+        if (t === 'ingreso' || t === 'deuda') return !getAccountTypeMeta(a.type).liability
+        return true
+      })
       const accType = methodToAccountType[m]
       const fallback = accType
-        ? data.accounts.find((a) => a.type === accType)
+        ? validForType.find((a) => a.type === accType)
         : undefined
-      setAccountId(fallback?.id ?? data.accounts[0]?.id ?? null)
+      setAccountId(fallback?.id ?? validForType[0]?.id ?? null)
       setDate(todayISO())
       setPerson(parsed?.person ?? '')
     }
     setShowAccountPicker(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
+
+  /** Only asset accounts (non-liability) for income/debt; all accounts for expenses/loans. */
+  const filteredAccounts = data.accounts.filter((a) => {
+    if (type === 'ingreso' || type === 'deuda') {
+      return !getAccountTypeMeta(a.type).liability
+    }
+    return true
+  })
+
+  // When type changes, reset account to first valid one if current is no longer allowed
+  useEffect(() => {
+    if (!isOpen) return
+    const stillValid = accountId && filteredAccounts.some((a) => a.id === accountId)
+    if (!stillValid && filteredAccounts.length > 0) {
+      setAccountId(filteredAccounts[0].id)
+      const m = Object.entries(methodToAccountType).find(
+        ([, v]) => v === filteredAccounts[0].type,
+      )?.[0]
+      setMethod((m ?? 'Otro') as Method)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, isOpen])
 
   const amountNum = Number.parseFloat(amount.replace(/,/g, '')) || 0
   const valid = amountNum > 0
@@ -243,7 +269,9 @@ export function TransactionModal() {
               ) : (
                 <div className="flex-1 py-1 text-left">
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Seleccionar cuenta
+                    {type === 'ingreso' || type === 'deuda'
+                      ? 'Seleccionar cuenta destino'
+                      : 'Seleccionar cuenta'}
                   </p>
                 </div>
               )}
@@ -293,7 +321,9 @@ export function TransactionModal() {
 
                 <div className="flex items-center justify-between px-5 pb-2 pt-4">
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    Seleccionar cuenta
+                    {type === 'ingreso' || type === 'deuda'
+                      ? 'Seleccionar cuenta destino'
+                      : 'Seleccionar cuenta origen'}
                   </p>
                   <button
                     type="button"
@@ -305,7 +335,7 @@ export function TransactionModal() {
                 </div>
 
                 <div className="flex flex-col overflow-y-auto">
-                  {data.accounts.map((acc) => {
+                  {filteredAccounts.map((acc) => {
                     const Icon = getIcon(acc.icon)
                     const meta = getAccountTypeMeta(acc.type)
                     const selected = acc.id === accountId

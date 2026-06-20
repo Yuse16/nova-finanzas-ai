@@ -101,6 +101,7 @@ export type StoreValue = {
   resetWithSnapshot: (snapshot: FinancialSnapshot) => void
   // NEW: Assistant History
   addAssistantMessage: (message: Omit<AssistantMessage, 'id' | 'createdAt'>) => void;
+  updateSelectedFont: (font: string) => void;
 }
 
 export const useStore = create<StoreValue>((set, get) => ({
@@ -317,6 +318,17 @@ export const useStore = create<StoreValue>((set, get) => ({
       storage.clear()
       set({ data: emptyAppData(), ready: true })
     })
+  },
+
+  updateSelectedFont: (font) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        profile: state.data.profile
+          ? { ...state.data.profile, selectedFont: font }
+          : null,
+      },
+    }))
   },
 
   // NEW: Assistant History Actions

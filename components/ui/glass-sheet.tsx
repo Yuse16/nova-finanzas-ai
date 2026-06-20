@@ -61,7 +61,7 @@ export function GlassSheet({
               role="dialog"
               aria-modal="true"
               aria-label={title}
-              className="relative max-h-[92vh] w-full max-w-md overflow-hidden rounded-t-[2rem] bg-white/[0.72] pb-[max(env(safe-area-inset-bottom),1.5rem)] shadow-[0_-8px_40px_rgba(0,0,0,0.08)] backdrop-blur-[24px] dark:bg-gray-900/[0.78] dark:shadow-[0_-8px_40px_rgba(0,0,0,0.3)]"
+              className="relative flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[2rem] bg-white/[0.72] pb-[max(env(safe-area-inset-bottom),1.5rem)] shadow-[0_-8px_40px_rgba(0,0,0,0.08)] backdrop-blur-[24px] dark:bg-gray-900/[0.78] dark:shadow-[0_-8px_40px_rgba(0,0,0,0.3)]"
             >
               <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
 
@@ -81,7 +81,7 @@ export function GlassSheet({
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 pt-2">{children}</div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-2">{children}</div>
 
               {footer && (
                 <div className="border-t border-white/30 px-6 pt-4 dark:border-white/10">

@@ -202,8 +202,8 @@ export function AccountModal() {
                     onClick={() => setBank(b.value)}
                     className={`rounded-xl px-3 py-2 text-xs font-medium transition-all active:scale-95 ${
                       bank === b.value
-                        ? 'bg-white/20 text-white shadow-sm'
-                        : 'bg-white/8 text-white/50 hover:bg-white/12 hover:text-white/70'
+                        ? 'bg-white/85 text-gray-900 shadow-sm dark:bg-white/20 dark:text-white dark:shadow-sm'
+                        : 'bg-white/50 text-gray-600 hover:bg-white/70 hover:text-gray-900 dark:bg-white/8 dark:text-white/50 dark:hover:bg-white/12 dark:hover:text-white/70'
                     }`}
                   >
                     {b.label}
@@ -235,7 +235,7 @@ export function AccountModal() {
                       key={opt}
                       type="button"
                       onClick={() => setIdentifier(opt)}
-                      className="rounded-lg bg-white/8 px-2.5 py-1 text-[11px] font-medium text-white/50 hover:bg-white/12 hover:text-white/70"
+                      className="rounded-lg bg-white/50 px-2.5 py-1 text-[11px] font-medium text-gray-500 hover:bg-white/70 hover:text-gray-700 dark:bg-white/8 dark:text-white/50 dark:hover:bg-white/12 dark:hover:text-white/70"
                     >
                       {opt}
                     </button>
@@ -250,8 +250,8 @@ export function AccountModal() {
                 onClick={() => setActiva(!activa)}
                 className={`rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
                   activa
-                    ? 'bg-white/20 text-white'
-                    : 'bg-white/8 text-white/40'
+                    ? 'bg-white/85 text-gray-900 dark:bg-white/20 dark:text-white'
+                    : 'bg-white/50 text-gray-500 dark:bg-white/8 dark:text-white/40'
                 }`}
               >
                 {activa ? 'Sí' : 'No'}
@@ -264,7 +264,7 @@ export function AccountModal() {
           <>
             <Field label="Límite de Crédito">
               <div className="relative">
-                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base text-muted-foreground">$</span>
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base text-gray-400 dark:text-gray-500">$</span>
                 <GlassInput
                   inputMode="decimal"
                   value={limiteCreditoStr}
@@ -321,7 +321,7 @@ export function AccountModal() {
 
         <Field label="Saldo Inicial / Actual">
           <div className="relative">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base text-muted-foreground">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base text-gray-400 dark:text-gray-500">
               $
             </span>
             <GlassInput

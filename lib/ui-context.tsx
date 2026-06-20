@@ -10,7 +10,7 @@ import {
 } from 'react'
 import type { Account, Goal, Movement, Reminder, MovementType } from './types'
 
-type ModalState =
+export type ModalState =
   | { kind: 'none' }
   | { kind: 'voice' }
   | { kind: 'transaction'; preset?: MovementType; editing?: Movement; parsed?: Partial<Movement> & { person?: string } }

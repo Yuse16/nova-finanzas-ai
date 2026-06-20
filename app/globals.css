@@ -109,7 +109,7 @@
   --debt-bg: oklch(0.68 0.19 25);
   --debt-shadow: oklch(0.68 0.19 25 / 40%);
 
-  --bg-image: url('/fondclar.webp');
+  --bg-image: url('/montanav2.webp');
   --bg-overlay: oklch(0.35 0.12 260 / 25%);
 }
 
@@ -171,8 +171,8 @@ html[data-theme="dark"] {
 
   --overlay-bg: rgba(0, 0, 0, 0.6);
 
-  --bg-image: url('/fondobs.webp');
-  --bg-overlay: rgba(0, 0, 0, 0.4);
+  --bg-image: url('/montanav2.webp');
+  --bg-overlay: rgba(0, 0, 0, 0.55);
 }
 
 /* backward compat for .dark class (not used by theme switcher but safe) */
