@@ -2,6 +2,7 @@
 
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { useStore } from '@/lib/store'
+import { useCustomization } from '@/context/ThemeCustomizationContext'
 import { fmt } from '@/lib/format'
 
 function getOffsetDateISO(daysOffset: number): string {
@@ -12,6 +13,7 @@ function getOffsetDateISO(daysOffset: number): string {
 
 export function HomeQuickStats() {
   const { data } = useStore()
+  const { settings } = useCustomization()
 
   const getExpensesForDays = (startOffset: number, endOffset: number) => {
     const start = getOffsetDateISO(startOffset)
@@ -57,12 +59,21 @@ export function HomeQuickStats() {
   const lastMonthInc = getIncomeForDays(59, 30)
   const incomeStats = getDeltaAndUp(monthInc, lastMonthInc)
 
-  const quickStats = [
+  let quickStats = [
     { label: 'Gastos hoy', value: todayExp, delta: todayStats.delta, up: todayStats.up },
     { label: 'Gastos semana', value: weekExp, delta: weekStats.delta, up: weekStats.up },
     { label: 'Gastos mes', value: monthExp, delta: monthStats.delta, up: monthStats.up },
     { label: 'Ingresos mes', value: monthInc, delta: incomeStats.delta, up: incomeStats.up },
   ]
+
+  if (!settings.dashboard.showExpenses) {
+    quickStats = quickStats.filter(s => s.label.startsWith('Ingresos'))
+  }
+  if (!settings.dashboard.showIncome) {
+    quickStats = quickStats.filter(s => !s.label.startsWith('Ingresos'))
+  }
+
+  if (quickStats.length === 0) return null
 
   return (
     <section className="flex flex-col gap-3">

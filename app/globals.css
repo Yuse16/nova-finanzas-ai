@@ -44,6 +44,18 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --custom-radius: 20px;
+  --custom-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+  --custom-border-width: 1px;
+  --custom-glass-opacity: 0.5;
+  --custom-font-size-scale: 1;
+  --custom-font-weight: 400;
+  --custom-letter-spacing: 0em;
+  --custom-spacing: 1rem;
+  --custom-widget-scale: 1;
+  --custom-glass-bg-light: rgba(255,255,255,0.72);
+  --custom-glass-bg-dark: rgba(17,24,39,0.7);
 }
 
 :root, html[data-theme="light"] {
@@ -314,4 +326,18 @@ html[data-theme="dark"] {
   100% {
     transform: scale(1);
   }
+}
+
+.high-contrast {
+  --custom-glass-bg-light: rgba(255,255,255,0.95) !important;
+  --custom-glass-bg-dark: rgba(0,0,0,0.9) !important;
+}
+
+.reduce-animations *,
+.reduce-animations *::before,
+.reduce-animations *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
 }

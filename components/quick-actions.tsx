@@ -13,6 +13,7 @@ import type { LucideIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { GlassCard } from './glass-card'
 import { useUI, type ModalState } from '@/lib/ui-context'
+import { useCustomization } from '@/context/ThemeCustomizationContext'
 
 const actions: { label: string; sub: string; icon: LucideIcon; kind: string | null; initialData?: any; color: string }[] =
   [
@@ -31,6 +32,9 @@ export function QuickActions({
   onVoice?: () => void
 }) {
   const { open } = useUI() // Usar el hook useUI
+  const { settings } = useCustomization()
+
+  if (!settings.dashboard.showQuickActions) return null
 
   return (
     <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">

@@ -10,6 +10,7 @@ import { VoiceExperience } from './voice-experience'
 import { Onboarding } from './onboarding'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
+import { ThemeCustomizationProvider } from '@/context/ThemeCustomizationContext'
 
 import { TransactionModal } from './transaction-modal'
 import { TransferModal } from './transfer-modal'
@@ -63,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FontProvider>
+    <ThemeCustomizationProvider>
       <div
         className="relative min-h-screen overflow-x-hidden"
         style={{ paddingTop: 'var(--sat)', minHeight: 'calc(100vh - var(--sat) - var(--sab))' }}
@@ -99,6 +100,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <VoiceExperience open={voiceOpen} onClose={closeVoice} />
       </div>
-    </FontProvider>
+    </ThemeCustomizationProvider>
   )
 }

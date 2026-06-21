@@ -1,11 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useUI } from '@/lib/ui-context'
 import { GlassSheet } from './ui/glass-sheet'
 import { useStore } from '@/lib/store' // NEW: Import useStore
 import { availableFonts } from '@/lib/types' // NEW: Import availableFonts
 
 export function SettingsModal() {
+  const router = useRouter()
   const { modal, open, close, theme, setTheme } = useUI()
   const isOpen = modal.kind === 'settings'
 
@@ -67,6 +69,20 @@ export function SettingsModal() {
             </label>
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-col gap-4 p-4 text-left">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Personalización</h3>
+        <button
+          type="button"
+          onClick={() => { close(); router.push('/settings/personalizacion') }}
+          className="flex items-center gap-3 rounded-2xl bg-white/50 dark:bg-white/10 p-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-200 active:scale-[0.98] transition-all"
+        >
+          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-blue-400 to-purple-400">
+            <span className="text-lg">🎨</span>
+          </span>
+          Personalizar apariencia
+        </button>
       </div>
 
       <div className="flex flex-col gap-4 border-t border-white/10 p-4 text-left">

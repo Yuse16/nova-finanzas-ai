@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Bell } from 'lucide-react'
 import { useUI } from '@/lib/ui-context'
+import { useCustomization } from '@/context/ThemeCustomizationContext'
 import { loadNotifications } from '@/lib/notifications'
 import { fmt, fmtShort } from '@/lib/format'
 import { isAccountLiability } from '@/lib/catalog'
@@ -17,6 +18,7 @@ export function HomeHero({
   onBellClick: () => void
 }) {
   const { theme } = useUI()
+  const { settings } = useCustomization()
   const [unread, setUnread] = useState(0)
 
   useEffect(() => {
@@ -86,23 +88,29 @@ export function HomeHero({
       </div>
 
       <div className="absolute bottom-20 left-5 z-10">
-        <p className="text-lg font-light text-gray-800 dark:text-gray-100">
-          Hola, {name} 👋
-        </p>
-        <p className="mt-1 text-xs font-normal uppercase tracking-widest text-gray-500 dark:text-gray-400">
-          Dinero disponible
-        </p>
-        <p className="mt-1 text-5xl font-semibold tracking-tight tabular-nums text-gray-900 dark:text-white">
-          {fmt(availableBalance)}
-        </p>
-        <div className="mt-1 flex items-center gap-1.5">
-          <span
-            className={`text-sm tabular-nums ${balanceChange >= 0 ? 'text-green-600' : 'text-red-500'}`}
-          >
-            {balanceChange >= 0 ? `+${fmtShort(balanceChange)}` : fmtShort(balanceChange)}
-          </span>
-          <span className="text-xs text-gray-400 dark:text-gray-500">este mes</span>
-        </div>
+        {settings.dashboard.showGreeting && (
+          <p className="text-lg font-light text-gray-800 dark:text-gray-100">
+            Hola, {name} 👋
+          </p>
+        )}
+        {settings.dashboard.showBalance && (
+          <>
+            <p className="mt-1 text-xs font-normal uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              Dinero disponible
+            </p>
+            <p className="mt-1 text-5xl font-semibold tracking-tight tabular-nums text-gray-900 dark:text-white">
+              {fmt(availableBalance)}
+            </p>
+            <div className="mt-1 flex items-center gap-1.5">
+              <span
+                className={`text-sm tabular-nums ${balanceChange >= 0 ? 'text-green-600' : 'text-red-500'}`}
+              >
+                {balanceChange >= 0 ? `+${fmtShort(balanceChange)}` : fmtShort(balanceChange)}
+              </span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">este mes</span>
+            </div>
+          </>
+        )}
       </div>
     </section>
   )

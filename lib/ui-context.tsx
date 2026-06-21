@@ -58,6 +58,7 @@ function getInitialTheme(): 'light' | 'dark' {
 function applyTheme(t: 'light' | 'dark') {
   if (typeof document === 'undefined') return
   document.documentElement.setAttribute('data-theme', t)
+  document.documentElement.classList.toggle('dark', t === 'dark')
 }
 
 export function UIProvider({ children }: { children: ReactNode }) {

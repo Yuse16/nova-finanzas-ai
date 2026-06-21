@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Lightbulb } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
+import { useCustomization } from '@/context/ThemeCustomizationContext'
 import { fmtShort } from '@/lib/format'
 
 const consejos = [
@@ -21,7 +22,10 @@ const consejos = [
 export function HomeGoalCard() {
   const { data } = useStore()
   const { open } = useUI()
+  const { settings } = useCustomization()
   const [tipIndex] = useState(() => Math.floor(Math.random() * consejos.length))
+
+  if (!settings.dashboard.showGoals) return null
 
   const sorted = [...data.goals]
     .filter((g) => g.target > 0)
