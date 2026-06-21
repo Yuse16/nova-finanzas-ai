@@ -67,7 +67,7 @@ export function HomeQuickStats() {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between px-5 pt-8 pb-2">
-        <h2 className="text-xl font-bold text-gray-900">Resumen rápido</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Resumen rápido</h2>
       </div>
       <div className="grid grid-cols-2 gap-3 px-5">
         {quickStats.map((stat, i) => {
@@ -76,10 +76,10 @@ export function HomeQuickStats() {
           return (
             <div
               key={stat.label}
-              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
             >
-              <p className="text-xs text-gray-500">{stat.label}</p>
-              <p className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
+              <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
+              <p className="mt-1 text-xl font-semibold tabular-nums text-gray-900 dark:text-white">
                 {fmt(stat.value)}
               </p>
               <div

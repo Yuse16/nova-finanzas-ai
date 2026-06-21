@@ -19,7 +19,7 @@ const filters: { label: string; value: 'todos' | MovementType }[] = [
 
 export function MovementsModule() {
   const { data } = useStore()
-  const { open } = useUI()
+  const { open, theme } = useUI()
   const [active, setActive] = useState<'todos' | MovementType>('todos')
 
   const grouped = useMemo(() => {
@@ -56,7 +56,7 @@ export function MovementsModule() {
       <section className="relative h-48 w-screen overflow-hidden -mt-5 left-1/2 -translate-x-1/2">
         <div className="absolute inset-0">
           <Image
-            src="/montanav2-horizontal.webp"
+            src={theme === 'dark' ? '/montanaobs-horizontal.webp' : '/montanav2-horizontal.webp'}
             alt=""
             fill
             priority
@@ -68,29 +68,31 @@ export function MovementsModule() {
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%]"
           style={{
-            background: 'linear-gradient(to bottom, transparent 0%, white 100%)',
+            background: theme === 'dark'
+              ? 'linear-gradient(to bottom, transparent 0%, #030712 100%)'
+              : 'linear-gradient(to bottom, transparent 0%, white 100%)',
           }}
         />
       </section>
 
       <div className="flex items-center justify-between px-5 pb-2 pt-4">
-        <h1 className="text-2xl font-bold text-gray-900">Movimientos</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Movimientos</h1>
         <div className="flex gap-2">
           <button
             type="button"
             aria-label="Buscar"
             onClick={() => open({ kind: 'search' })}
-            className="grid size-9 place-items-center rounded-xl bg-white shadow-sm"
+            className="grid size-9 place-items-center rounded-xl bg-white shadow-sm dark:bg-gray-900"
           >
-            <Search className="size-4 text-gray-500" />
+            <Search className="size-4 text-gray-500 dark:text-gray-400" />
           </button>
           <button
             type="button"
             aria-label="Filtros"
             onClick={() => open({ kind: 'filters' })}
-            className="grid size-9 place-items-center rounded-xl bg-white shadow-sm"
+            className="grid size-9 place-items-center rounded-xl bg-white shadow-sm dark:bg-gray-900"
           >
-            <SlidersHorizontal className="size-4 text-gray-500" />
+            <SlidersHorizontal className="size-4 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
       </div>
@@ -101,7 +103,7 @@ export function MovementsModule() {
             key={f.value}
             type="button"
             onClick={() => setActive(f.value)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${active === f.value ? 'bg-white text-blue-600 shadow-sm' : 'bg-gray-100 text-gray-600'}`}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${active === f.value ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-900' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}
           >
             {f.label}
           </button>
@@ -110,8 +112,8 @@ export function MovementsModule() {
 
       <div className="flex flex-col pt-2">
         {grouped.map((section) => (
-          <div key={section.group} className="mx-4 mb-4 rounded-2xl bg-white shadow-sm">
-            <p className="px-5 pt-4 pb-2 text-sm font-medium text-gray-400">
+          <div key={section.group} className="mx-4 mb-4 rounded-2xl bg-white shadow-sm dark:bg-gray-900">
+            <p className="px-5 pt-4 pb-2 text-sm font-medium text-gray-400 dark:text-gray-400">
               {section.group}
             </p>
             <div>
@@ -126,7 +128,7 @@ export function MovementsModule() {
                   <div
                     key={m.id}
                     onClick={() => open({ kind: 'transaction', editing: m })}
-                    className="flex cursor-pointer items-center gap-3 border-b border-gray-50 px-5 py-3 transition-colors last:border-b-0 active:bg-gray-50"
+                    className="flex cursor-pointer items-center gap-3 border-b border-gray-50 px-5 py-3 transition-colors last:border-b-0 active:bg-gray-50 dark:border-gray-800 dark:active:bg-gray-800"
                   >
                     <span
                       className="grid size-9 shrink-0 place-items-center rounded-xl"
@@ -135,8 +137,8 @@ export function MovementsModule() {
                       <Icon className="size-4 text-white" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-900">{m.title}</p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{m.title}</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-400">
                         {m.category}{accountName ? ` · ${accountName}` : ''}
                       </p>
                     </div>
@@ -146,7 +148,7 @@ export function MovementsModule() {
                       >
                         {sign}{fmt(m.amount)}
                       </span>
-                      <span className="text-gray-300">›</span>
+                      <span className="text-gray-300 dark:text-gray-600">›</span>
                     </div>
                   </div>
                 )
@@ -155,7 +157,7 @@ export function MovementsModule() {
           </div>
         ))}
         {grouped.length === 0 && (
-          <p className="px-5 py-6 text-center text-sm text-gray-400">
+          <p className="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-400">
             No hay movimientos registrados.
           </p>
         )}
@@ -164,10 +166,10 @@ export function MovementsModule() {
       <button
         type="button"
         onClick={() => open({ kind: 'all-movements' })}
-        className="mx-4 flex items-center justify-center gap-1 rounded-2xl bg-white py-3 text-sm font-semibold text-gray-900 shadow-sm active:bg-gray-50"
+        className="mx-4 flex items-center justify-center gap-1 rounded-2xl bg-white py-3 text-sm font-semibold text-gray-900 shadow-sm active:bg-gray-50 dark:bg-gray-900 dark:text-white dark:active:bg-gray-800"
       >
         Ver más movimientos
-        <span className="text-gray-300">›</span>
+        <span className="text-gray-300 dark:text-gray-600">›</span>
       </button>
     </div>
   )

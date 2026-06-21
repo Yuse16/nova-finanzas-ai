@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Bell } from 'lucide-react'
+import { useUI } from '@/lib/ui-context'
 import { loadNotifications } from '@/lib/notifications'
 import { fmt, fmtShort } from '@/lib/format'
 import { isAccountLiability } from '@/lib/catalog'
@@ -15,6 +16,7 @@ export function HomeHero({
   data: AppData
   onBellClick: () => void
 }) {
+  const { theme } = useUI()
   const [unread, setUnread] = useState(0)
 
   useEffect(() => {
@@ -47,7 +49,7 @@ export function HomeHero({
     <section className="relative h-[40vh] min-h-[280px] w-screen overflow-hidden -mt-6 left-1/2 -translate-x-1/2">
       <div className="absolute inset-0">
         <Image
-          src="/montanav2.webp"
+          src={theme === 'dark' ? '/montanaobs.webp' : '/montanav2.webp'}
           alt=""
           fill
           priority
@@ -61,7 +63,9 @@ export function HomeHero({
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%]"
         style={{
-          background: 'linear-gradient(to bottom, transparent 0%, white 100%)',
+          background: theme === 'dark'
+            ? 'linear-gradient(to bottom, transparent 0%, #030712 100%)'
+            : 'linear-gradient(to bottom, transparent 0%, white 100%)',
         }}
       />
 
@@ -82,13 +86,13 @@ export function HomeHero({
       </div>
 
       <div className="absolute bottom-20 left-5 z-10">
-        <p className="text-lg font-light text-gray-800">
+        <p className="text-lg font-light text-gray-800 dark:text-gray-100">
           Hola, {name} 👋
         </p>
-        <p className="mt-1 text-xs font-normal uppercase tracking-widest text-gray-500">
+        <p className="mt-1 text-xs font-normal uppercase tracking-widest text-gray-500 dark:text-gray-400">
           Dinero disponible
         </p>
-        <p className="mt-1 text-5xl font-semibold tracking-tight tabular-nums text-gray-900">
+        <p className="mt-1 text-5xl font-semibold tracking-tight tabular-nums text-gray-900 dark:text-white">
           {fmt(availableBalance)}
         </p>
         <div className="mt-1 flex items-center gap-1.5">
@@ -97,7 +101,7 @@ export function HomeHero({
           >
             {balanceChange >= 0 ? `+${fmtShort(balanceChange)}` : fmtShort(balanceChange)}
           </span>
-          <span className="text-xs text-gray-400">este mes</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">este mes</span>
         </div>
       </div>
     </section>

@@ -25,14 +25,14 @@ function creditUtilization(acc: Account): string | null {
 
 export function AccountsModule() {
   const { data } = useStore()
-  const { open } = useUI()
+  const { open, theme } = useUI()
 
   return (
     <div className="flex flex-col pb-32">
       <section className="relative h-48 w-screen overflow-hidden -mt-5 left-1/2 -translate-x-1/2">
         <div className="absolute inset-0">
           <Image
-            src="/montanav2-horizontal.webp"
+            src={theme === 'dark' ? '/montanaobs-horizontal.webp' : '/montanav2-horizontal.webp'}
             alt=""
             fill
             priority
@@ -44,13 +44,15 @@ export function AccountsModule() {
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%]"
           style={{
-            background: 'linear-gradient(to bottom, transparent 0%, white 100%)',
+            background: theme === 'dark'
+              ? 'linear-gradient(to bottom, transparent 0%, #030712 100%)'
+              : 'linear-gradient(to bottom, transparent 0%, white 100%)',
           }}
         />
       </section>
 
       <div className="flex items-center justify-between px-5 pb-2 pt-4">
-        <h1 className="text-2xl font-bold text-gray-900">Cuentas</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Cuentas</h1>
         <button
           type="button"
           onClick={() => open({ kind: 'account' })}
@@ -60,7 +62,7 @@ export function AccountsModule() {
         </button>
       </div>
 
-      <div className="mx-4 rounded-2xl bg-white shadow-sm">
+      <div className="mx-4 rounded-2xl bg-white shadow-sm dark:bg-gray-900">
         <div>
           {data.accounts.map((acc) => {
             const Icon = getIcon(acc.icon)
@@ -73,7 +75,7 @@ export function AccountsModule() {
               <div
                 key={acc.id}
                 onClick={() => open({ kind: 'account-detail', account: acc })}
-                className="flex cursor-pointer items-center gap-3 border-b border-gray-50 px-5 py-3 transition-colors last:border-b-0 active:bg-gray-50"
+                className="flex cursor-pointer items-center gap-3 border-b border-gray-50 px-5 py-3 transition-colors last:border-b-0 active:bg-gray-50 dark:border-gray-800 dark:active:bg-gray-800"
               >
                 <span
                   className="grid size-9 shrink-0 place-items-center rounded-xl"
@@ -82,27 +84,27 @@ export function AccountsModule() {
                   <Icon className="size-4 text-white" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900">{acc.name}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{acc.name}</p>
                   {label && (
-                    <p className="text-sm text-gray-400">{label}</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-400">{label}</p>
                   )}
                   {util && (
-                    <p className="text-xs text-gray-400">{util}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-400">{util}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`text-sm font-semibold tabular-nums ${isNegative ? 'text-red-500' : 'text-gray-900'}`}
+                    className={`text-sm font-semibold tabular-nums ${isNegative ? 'text-red-500' : 'text-gray-900 dark:text-white'}`}
                   >
                     {fmt(acc.balance)}
                   </span>
-                  <span className="text-gray-300">›</span>
+                  <span className="text-gray-300 dark:text-gray-600">›</span>
                 </div>
               </div>
             )
           })}
           {data.accounts.length === 0 && (
-            <p className="px-5 py-6 text-center text-sm text-gray-400">
+            <p className="px-5 py-6 text-center text-sm text-gray-400 dark:text-gray-400">
               No tienes cuentas creadas.
             </p>
           )}

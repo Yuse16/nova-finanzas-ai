@@ -22,14 +22,14 @@ export function BottomNav() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-      <nav className="glass-strong pointer-events-auto relative mx-4 flex w-full max-w-md items-center justify-between rounded-3xl px-6 py-3" style={{ background: 'rgba(255,255,255,0.85)' }}>
+      <nav className="glass-strong pointer-events-auto relative mx-4 flex w-full max-w-md items-center justify-between rounded-3xl px-6 py-3">
         <div className="flex flex-1 justify-around">
           {items.map((it) => (
             <Link
               key={it.label}
               href={it.href}
               className={`flex flex-col items-center gap-1 text-[11px] ${
-                isActive(it.href) ? 'text-foreground' : 'text-gray-400'
+                isActive(it.href) ? 'text-foreground' : 'text-gray-400 dark:text-gray-500'
               }`}
             >
               <it.icon className="size-5" />
@@ -57,7 +57,7 @@ export function BottomNav() {
               key={it.label}
               href={it.href}
               className={`flex flex-col items-center gap-1 text-[11px] ${
-                isActive(it.href) ? 'text-foreground' : 'text-gray-400'
+                isActive(it.href) ? 'text-foreground' : 'text-gray-400 dark:text-gray-500'
               }`}
             >
               <it.icon className="size-5" />
@@ -67,7 +67,7 @@ export function BottomNav() {
           <button
             type="button"
             onClick={() => open({ kind: 'more-options' })}
-            className="flex flex-col items-center gap-1 text-[11px] text-gray-400"
+            className="flex flex-col items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500"
           >
             <Menu className="size-5" />
             Más

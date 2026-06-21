@@ -110,6 +110,8 @@
   --debt-shadow: oklch(0.68 0.19 25 / 40%);
 
   --bg-image: url('/montanav2.webp');
+  --bg-image-horizontal: url('/montanav2-horizontal.webp');
+  --hero-fade: linear-gradient(to bottom, transparent 0%, white 100%);
   --bg-overlay: oklch(0.35 0.12 260 / 25%);
 }
 
@@ -171,7 +173,9 @@ html[data-theme="dark"] {
 
   --overlay-bg: rgba(0, 0, 0, 0.6);
 
-  --bg-image: url('/montanav2.webp');
+  --bg-image: url('/montanaobs.webp');
+  --bg-image-horizontal: url('/montanaobs-horizontal.webp');
+  --hero-fade: linear-gradient(to bottom, transparent 0%, #030712 100%);
   --bg-overlay: rgba(0, 0, 0, 0.55);
 }
 
@@ -205,7 +209,7 @@ html[data-theme="dark"] {
   }
   body {
     @apply text-foreground;
-    background: white;
+    background: var(--background);
     background-attachment: fixed;
   }
   html {

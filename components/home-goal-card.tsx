@@ -34,28 +34,28 @@ export function HomeGoalCard() {
     const remaining = Math.max(main.target - main.saved, 0)
 
     return (
-      <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm mx-4 mb-6">
+      <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm mx-4 mb-6 dark:bg-gray-900">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">Metas</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Metas</h2>
           <div className="flex items-center gap-3">
-            <Link href="/metas" className="text-sm text-blue-500">Ver todas</Link>
-            <button type="button" onClick={() => open({ kind: 'goal' })} className="text-sm font-semibold text-blue-500">+ Nueva meta</button>
+            <Link href="/metas" className="text-sm text-blue-500 dark:text-blue-400">Ver todas</Link>
+            <button type="button" onClick={() => open({ kind: 'goal' })} className="text-sm font-semibold text-blue-500 dark:text-blue-400">+ Nueva meta</button>
           </div>
         </div>
-        <Link href="/metas" className="block border-b border-gray-50 last:border-b-0">
+        <Link href="/metas" className="block border-b border-gray-50 last:border-b-0 dark:border-gray-800">
           <div className="py-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-base font-semibold text-gray-900">{main.title}</p>
+                <p className="text-base font-semibold text-gray-900 dark:text-white">{main.title}</p>
                 <p className="text-sm text-gray-400">{fmtShort(main.saved)} de {fmtShort(main.target)}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-400">Faltan {fmtShort(remaining)}</span>
-                <span className="text-gray-300">›</span>
+                <span className="text-gray-300 dark:text-gray-600">›</span>
               </div>
             </div>
           </div>
-          <div className="h-[3px] overflow-hidden rounded-full bg-gray-100">
+          <div className="h-[3px] overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
             <div
               className="h-full rounded-full bg-blue-500 transition-all duration-700"
               style={{ width: `${pct}%` }}
@@ -69,17 +69,17 @@ export function HomeGoalCard() {
   const tip = consejos[tipIndex]
 
   return (
-    <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm mx-4 mb-6">
+    <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm mx-4 mb-6 dark:bg-gray-900">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900">Metas</h2>
-        <button type="button" onClick={() => open({ kind: 'goal' })} className="text-sm font-semibold text-blue-500">+ Nueva meta</button>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Metas</h2>
+        <button type="button" onClick={() => open({ kind: 'goal' })} className="text-sm font-semibold text-blue-500 dark:text-blue-400">+ Nueva meta</button>
       </div>
-      <div className="border-b border-gray-50 last:border-b-0 py-3">
+      <div className="border-b border-gray-50 last:border-b-0 py-3 dark:border-gray-800">
         <div className="flex gap-3">
           <Lightbulb className="mt-0.5 size-4 shrink-0 text-blue-400" />
           <div>
-            <p className="text-sm font-semibold text-gray-900">{tip.titulo}</p>
-            <p className="mt-1 text-sm text-gray-400">{tip.desc}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">{tip.titulo}</p>
+            <p className="mt-1 text-sm text-gray-400 dark:text-gray-400">{tip.desc}</p>
           </div>
         </div>
       </div>
