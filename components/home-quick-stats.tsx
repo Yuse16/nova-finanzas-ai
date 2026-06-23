@@ -77,10 +77,10 @@ export function HomeQuickStats() {
 
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between px-5 pt-8 pb-2">
+      <div className="flex items-center justify-between pt-8 pb-2">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Resumen rápido</h2>
       </div>
-      <div className="grid grid-cols-2 gap-3 px-5">
+      <div className="grid grid-cols-2 gap-3">
         {quickStats.map((stat, i) => {
           const isIncome = stat.label.startsWith('Ingresos')
           const good = isIncome ? stat.up : !stat.up

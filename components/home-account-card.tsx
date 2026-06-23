@@ -18,22 +18,22 @@ export function HomeAccountCard() {
   if (liquidAccounts.length === 0) return null
 
   return (
-    <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm mx-4 mb-6 dark:bg-gray-900">
-      <div className="flex items-center justify-between">
+    <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm dark:bg-gray-900">
+      <div className="flex items-center justify-between mb-1">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Cuentas</h2>
-        <Link href="/cuentas" className="text-sm text-blue-500">Ver todas</Link>
+        <Link href="/cuentas" className="text-sm font-medium text-blue-500">Ver todas</Link>
       </div>
       <div>
         {liquidAccounts.map((acc) => (
-          <div key={acc.id} className="border-b border-gray-50 last:border-b-0 dark:border-gray-800">
-            <div className="flex items-center justify-between py-3">
-              <div>
-                <p className="text-base font-semibold text-gray-900 dark:text-white">{acc.name}</p>
-                <p className="text-sm text-gray-400">Disponible</p>
+          <div key={acc.id} className="border-b border-gray-100 last:border-b-0 dark:border-gray-800">
+            <div className="flex items-center py-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{acc.name}</p>
+                <p className="text-sm text-gray-400 mt-0.5">Disponible</p>
               </div>
-              <div className="flex items-center">
-                <span className="text-base font-semibold text-gray-900 dark:text-white">{fmt(acc.balance)}</span>
-                <span className="ml-2 text-gray-300 dark:text-gray-600">›</span>
+              <div className="flex items-center gap-2 shrink-0 ml-3">
+                <span className="text-base font-semibold tabular-nums text-gray-900 dark:text-white">{fmt(acc.balance)}</span>
+                <span className="text-gray-300 dark:text-gray-600">›</span>
               </div>
             </div>
           </div>

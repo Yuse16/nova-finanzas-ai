@@ -38,7 +38,7 @@ export function HomeGoalCard() {
     const remaining = Math.max(main.target - main.saved, 0)
 
     return (
-      <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm mx-4 mb-6 dark:bg-gray-900">
+      <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm dark:bg-gray-900">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Metas</h2>
           <div className="flex items-center gap-3">
@@ -73,7 +73,7 @@ export function HomeGoalCard() {
   const tip = consejos[tipIndex]
 
   return (
-    <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm mx-4 mb-6 dark:bg-gray-900">
+    <section className="rounded-2xl bg-white px-5 pt-4 pb-2 shadow-sm dark:bg-gray-900">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Metas</h2>
         <button type="button" onClick={() => open({ kind: 'goal' })} className="text-sm font-semibold text-blue-500 dark:text-blue-400">+ Nueva meta</button>
