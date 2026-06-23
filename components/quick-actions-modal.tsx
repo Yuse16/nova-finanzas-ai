@@ -8,6 +8,7 @@ import {
   Plus,
   Target,
   Sparkles,
+  MessageSquare,
 } from 'lucide-react'
 
 export function QuickActionsModal() {
@@ -15,6 +16,12 @@ export function QuickActionsModal() {
   const isOpen = modal.kind === 'quick-actions'
 
   const options = [
+    {
+      label: 'Nova AI Chat',
+      icon: MessageSquare,
+      color: 'oklch(0.68 0.18 295)',
+      onClick: () => open({ kind: 'nova-ai' }),
+    },
     {
       label: 'Registrar gasto',
       icon: TrendingDown,
@@ -38,12 +45,6 @@ export function QuickActionsModal() {
       icon: Target,
       color: 'oklch(0.78 0.16 120)',
       onClick: () => open({ kind: 'goal' }),
-    },
-    {
-      label: 'Hablar con Nova',
-      icon: Sparkles,
-      color: 'oklch(0.68 0.18 295)',
-      onClick: () => { close(); setTimeout(() => open({ kind: 'voice' }), 100) },
     },
   ]
 

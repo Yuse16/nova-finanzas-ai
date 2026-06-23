@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, ArrowLeftRight, Wallet, Menu, Diamond } from 'lucide-react'
+import { Home, ArrowLeftRight, Wallet, Menu, Diamond, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUI } from '@/lib/ui-context'
@@ -40,15 +40,15 @@ export function BottomNav() {
 
         <button
           type="button"
-          onClick={() => open({ kind: 'quick-actions' })}
-          aria-label="Abrir Nova"
+          onClick={() => open({ kind: 'nova-ai' })}
+          aria-label="Nova AI"
           className="relative -mt-8 grid size-14 shrink-0 place-items-center rounded-full outline-none"
           style={{
             background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
             boxShadow: '0 4px 20px rgba(59, 130, 246, 0.4)',
           }}
         >
-          <Diamond size={24} strokeWidth={1.5} className="text-white" />
+          <Sparkles size={24} strokeWidth={1.5} className="text-white" />
         </button>
 
         <div className="flex flex-1 justify-around">

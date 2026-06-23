@@ -15,6 +15,7 @@ import { ThemeCustomizationProvider } from '@/context/ThemeCustomizationContext'
 import { TransactionModal } from './transaction-modal'
 import { TransferModal } from './transfer-modal'
 import { QuickActionsModal } from './quick-actions-modal'
+import { NovaAIModal } from './nova-ai-modal'
 import { AccountModal } from './account-modal'
 import { AccountDetailModal } from './account-detail-modal'
 import { GoalModal } from './goal-modal'
@@ -84,6 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <TransactionModal />
         <TransferModal />
         <QuickActionsModal />
+        <NovaAIModal />
         <AccountModal />
         <AccountDetailModal />
         <GoalModal />
