@@ -28,7 +28,7 @@ export type ModalState =
   | { kind: 'filters' }
   | { kind: 'notifications' } // NUEVO: Tipo de modal para notificaciones
   | { kind: 'quick-actions' }
-  | { kind: 'nova-ai' }
+  | { kind: 'nova-ai'; startVoice?: boolean }
   | { kind: 'more-options' }
   | { kind: 'balance-detail' }
   | { kind: 'reset-financial' }

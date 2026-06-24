@@ -77,6 +77,28 @@ export function NovaAIModal() {
     }
   }, [isOpen])
 
+  // Auto-start voice when opened with startVoice flag
+  useEffect(() => {
+    if (isOpen && modal.kind === 'nova-ai' && modal.startVoice && supported) {
+      reset()
+      start()
+      setListening(true)
+      setShowChips(false)
+    }
+  }, [isOpen])
+
+  // Stop voice when user releases the Nova button (custom event)
+  useEffect(() => {
+    if (!isOpen) return
+    function handleVoiceEnd() {
+      if (listening) {
+        stop()
+      }
+    }
+    window.addEventListener('nova-voice-end', handleVoiceEnd)
+    return () => window.removeEventListener('nova-voice-end', handleVoiceEnd)
+  }, [isOpen, listening, stop])
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])

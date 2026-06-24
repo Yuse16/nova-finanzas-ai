@@ -1,6 +1,7 @@
 'use client'
 
-import { Home, ArrowLeftRight, Wallet, Menu, Diamond, Sparkles } from 'lucide-react'
+import { useRef } from 'react'
+import { Home, ArrowLeftRight, Wallet, Menu, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUI } from '@/lib/ui-context'
@@ -19,6 +20,40 @@ export function BottomNav() {
   const { open } = useUI()
 
   const isActive = (href: string) => pathname === href
+
+  const novaHoldRef = useRef(false)
+  const novaDidHoldRef = useRef(false)
+  const novaTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function novaDown() {
+    novaHoldRef.current = true
+    novaDidHoldRef.current = false
+    novaTimerRef.current = setTimeout(() => {
+      novaDidHoldRef.current = true
+      if (novaHoldRef.current) {
+        open({ kind: 'nova-ai', startVoice: true })
+      }
+    }, 200)
+  }
+
+  function novaUp() {
+    const wasHolding = novaDidHoldRef.current
+    novaHoldRef.current = false
+    if (novaTimerRef.current) {
+      clearTimeout(novaTimerRef.current)
+      novaTimerRef.current = null
+    }
+    if (wasHolding) {
+      window.dispatchEvent(new CustomEvent('nova-voice-end'))
+    }
+  }
+
+  function novaClick() {
+    if (!novaDidHoldRef.current) {
+      open({ kind: 'nova-ai' })
+    }
+    novaDidHoldRef.current = false
+  }
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[max(env(safe-area-inset-bottom),0.75rem)]">
@@ -40,9 +75,14 @@ export function BottomNav() {
 
         <button
           type="button"
-          onClick={() => open({ kind: 'nova-ai' })}
+          onClick={novaClick}
+          onMouseDown={novaDown}
+          onMouseUp={novaUp}
+          onMouseLeave={novaUp}
+          onTouchStart={novaDown}
+          onTouchEnd={novaUp}
           aria-label="Nova AI"
-          className="relative -mt-8 grid size-14 shrink-0 place-items-center rounded-full outline-none"
+          className="relative -mt-8 grid size-14 shrink-0 place-items-center rounded-full outline-none active:scale-90 transition-transform"
           style={{
             background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
             boxShadow: '0 4px 20px rgba(59, 130, 246, 0.4)',
