@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Send, Sparkles, TrendingUp, TrendingDown, Target, BarChart3, CreditCard, Check, Loader2, Mic, Wallet, PiggyBank, Calendar } from 'lucide-react'
+import { X, Send, Sparkles, TrendingUp, TrendingDown, Target, BarChart3, CreditCard, Check, Loader2, Mic, MicOff, Wallet, PiggyBank, Calendar, ChevronDown } from 'lucide-react'
 import { useUI } from '@/lib/ui-context'
 import { GlassSheet } from './ui/glass-sheet'
 import { sendChatMessage, type NovaIntent, type DetectedData } from '@/lib/services/openrouter'
@@ -36,6 +36,19 @@ function nextId() {
   return `msg-${msgId}`
 }
 
+function VoiceMenuItem({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 active:scale-[0.98] transition-all text-left"
+    >
+      <span className="text-base">{icon}</span>
+      {label}
+    </button>
+  )
+}
+
 export function NovaAIModal() {
   const { modal, close } = useUI()
   const isOpen = modal.kind === 'nova-ai'
@@ -46,8 +59,13 @@ export function NovaAIModal() {
   const [loading, setLoading] = useState(false)
   const [showChips, setShowChips] = useState(true)
   const [listening, setListening] = useState(false)
+  const [showVoiceMenu, setShowVoiceMenu] = useState(false)
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isHoldingRef = useRef(false)
+  const didHoldRef = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const voiceBtnRef = useRef<HTMLButtonElement>(null)
 
   const { supported, status, transcript, start, stop, reset } = useSpeechRecognition()
 
@@ -63,12 +81,22 @@ export function NovaAIModal() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Voice recognition result handler
+  // Close voice menu on outside click
+  useEffect(() => {
+    if (!showVoiceMenu) return
+    function handleClick(e: MouseEvent) {
+      if (voiceBtnRef.current && !voiceBtnRef.current.contains(e.target as Node)) {
+        setShowVoiceMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showVoiceMenu])
+
+  // Voice recognition result handler for hold-to-talk
   useEffect(() => {
     if (status === 'done' && transcript && listening) {
-      setInput(transcript)
       setListening(false)
-      // Auto-send after voice
       handleSend(transcript)
     }
     if (status === 'error' && listening) {
@@ -76,15 +104,46 @@ export function NovaAIModal() {
     }
   }, [status, transcript, listening])
 
-  function toggleVoice() {
-    if (listening) {
-      stop()
-      setListening(false)
-    } else {
+  function startHolding() {
+    isHoldingRef.current = true
+    didHoldRef.current = false
+    holdTimerRef.current = setTimeout(() => {
+      didHoldRef.current = true
+      // Started holding — begin recording
       reset()
       start()
       setListening(true)
+    }, 150)
+  }
+
+  function stopHolding() {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current)
+      holdTimerRef.current = null
     }
+    if (isHoldingRef.current && listening) {
+      stop()
+    }
+    isHoldingRef.current = false
+  }
+
+  function tapVoice() {
+    if (didHoldRef.current) {
+      didHoldRef.current = false
+      return
+    }
+    if (listening) {
+      stop()
+      setListening(false)
+      setShowVoiceMenu(false)
+    } else {
+      setShowVoiceMenu(prev => !prev)
+    }
+  }
+
+  function voiceMenuOption(prompt: string) {
+    setShowVoiceMenu(false)
+    handleSend(prompt)
   }
 
   async function handleSend(text: string) {
@@ -374,18 +433,45 @@ export function NovaAIModal() {
             className="flex items-center gap-2"
           >
             {supported && (
-              <button
-                type="button"
-                onClick={toggleVoice}
-                disabled={loading}
-                className={`grid size-10 shrink-0 place-items-center rounded-full transition-all ${
-                  listening
-                    ? 'bg-red-500 text-white scale-110 shadow-lg shadow-red-500/40'
-                    : 'bg-white/60 dark:bg-white/[0.08] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
-                }`}
-              >
-                <Mic className="size-4" />
-              </button>
+              <div className="relative">
+                <button
+                  ref={voiceBtnRef}
+                  type="button"
+                  disabled={loading}
+                  onMouseDown={startHolding}
+                  onMouseUp={stopHolding}
+                  onMouseLeave={stopHolding}
+                  onTouchStart={startHolding}
+                  onTouchEnd={stopHolding}
+                  onClick={tapVoice}
+                  className={`grid size-10 shrink-0 place-items-center rounded-full transition-all ${
+                    listening
+                      ? 'bg-red-500 text-white scale-110 shadow-lg shadow-red-500/40'
+                      : 'bg-white/60 dark:bg-white/[0.08] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  {listening ? <MicOff className="size-4" /> : <Mic className="size-4" />}
+                </button>
+                <AnimatePresence>
+                  {showVoiceMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15, ease: [0.32, 0.72, 0, 1] }}
+                      className="absolute bottom-full left-0 mb-2 w-56 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl overflow-hidden"
+                    >
+                      <div className="p-1.5">
+                        <VoiceMenuItem icon="💰" label="Registrar gasto" onClick={() => voiceMenuOption('Agrega un gasto de')} />
+                        <VoiceMenuItem icon="💵" label="Registrar ingreso" onClick={() => voiceMenuOption('Registra un ingreso de')} />
+                        <VoiceMenuItem icon="🎯" label="Crear meta" onClick={() => voiceMenuOption('Quiero crear una meta de')} />
+                        <VoiceMenuItem icon="📊" label="Resumen del mes" onClick={() => voiceMenuOption('Dame un resumen de este mes')} />
+                        <VoiceMenuItem icon="💳" label="Analizar deudas" onClick={() => voiceMenuOption('Analiza mis deudas')} />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
             <input
               ref={inputRef}
