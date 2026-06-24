@@ -69,7 +69,8 @@ export async function sendChatMessage(messages: { role: string; content: string 
   })
 
   if (!res.ok) {
-    throw new Error('Error al contactar con Nova AI')
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || 'Error al contactar con Nova AI')
   }
 
   const json = await res.json()

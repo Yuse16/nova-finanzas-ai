@@ -108,8 +108,9 @@ export function NovaAIModal() {
         data: response.data,
       }
       setMessages(prev => [...prev, assistantMsg])
-    } catch {
-      setMessages(prev => [...prev, { id: nextId(), role: 'assistant', content: 'Lo siento, hubo un error al comunicarme con Nova AI. Intenta de nuevo.' }])
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Error al conectar con Nova AI'
+      setMessages(prev => [...prev, { id: nextId(), role: 'assistant', content: `⚠️ ${errorMsg}` }])
     } finally {
       setLoading(false)
     }
