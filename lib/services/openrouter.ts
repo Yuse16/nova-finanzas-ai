@@ -1,4 +1,4 @@
-export type NovaIntent = 'addExpense' | 'addIncome' | 'analyzeDebt' | 'createGoal' | 'financialAdvice' | 'unknown'
+export type NovaIntent = 'addExpense' | 'addIncome' | 'analyzeDebt' | 'createGoal' | 'financialAdvice' | 'appQuestion' | 'unknown'
 
 export type DetectedData = {
   categoria?: string
