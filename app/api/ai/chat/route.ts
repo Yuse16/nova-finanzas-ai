@@ -90,6 +90,21 @@ Monto: <monto>
 Para PREGUNTAS SOBRE LA APLICACIÓN (cómo usar algo, dudas de funcionalidad):
 [DETECTED:appQuestion]
 
+Para RESUMEN MENSUAL (cuando el usuario pide ver su resumen del mes):
+[DETECTED:monthlySummary]
+Ingresos: <monto total ingresos>
+Gastos: <monto total gastos>
+Ahorro: <ingresos - gastos>
+Periodo: <mes actual>
+
+Para DETECTAR SUSCRIPCIONES (cuando pide revisar pagos recurrentes):
+[DETECTED:subscriptions]
+
+Para SIMULACIÓN (cuando pregunta "qué pasaría si..." o escenarios hipotéticos):
+[DETECTED:simulation]
+Escenario: <descripción>
+Resultado: <explicación del resultado>
+
 Si no detectas ninguna intención clara, responde sin bloque DETECTED.`
   }
 
