@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <ThemeCustomizationProvider>
       <div
-        className="relative min-h-screen overflow-x-hidden"
+        className="relative min-h-screen overflow-x-hidden bg-gray-50 dark:bg-gray-950"
         style={{ paddingTop: 'var(--sat)', minHeight: 'calc(100vh - var(--sat) - var(--sab))' }}
       >
         {pathname !== '/' && pathname !== '/movimientos' && pathname !== '/cuentas' && (
