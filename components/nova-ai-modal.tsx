@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Send, Sparkles, TrendingUp, TrendingDown, Target, BarChart3, CreditCard, Check, Loader2, Mic, MicOff, Wallet, PiggyBank, Calendar, ChevronDown } from 'lucide-react'
+import { X, Send, Sparkles, TrendingUp, TrendingDown, Target, BarChart3, CreditCard, Check, Loader2, Mic, MicOff, Wallet, PiggyBank, Calendar, ChevronDown, WifiOff } from 'lucide-react'
 import { useUI } from '@/lib/ui-context'
 import { GlassSheet } from './ui/glass-sheet'
 import { sendChatMessage, type NovaIntent, type DetectedData } from '@/lib/services/openrouter'
+import { sendHybridMessage, type HybridResult, getConnectionStatus } from '@/lib/services/hybrid-ai'
 import { fmt } from '@/lib/format'
 import { useStore } from '@/lib/store'
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition'
@@ -68,6 +69,18 @@ export function NovaAIModal() {
   const voiceBtnRef = useRef<HTMLButtonElement>(null)
 
   const { supported, status, transcript, start, stop, reset } = useSpeechRecognition()
+
+  const [isOffline, setIsOffline] = useState(!getConnectionStatus())
+
+  useEffect(() => {
+    function update() { setIsOffline(!getConnectionStatus()) }
+    window.addEventListener('online', update)
+    window.addEventListener('offline', update)
+    return () => {
+      window.removeEventListener('online', update)
+      window.removeEventListener('offline', update)
+    }
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -180,17 +193,17 @@ export function NovaAIModal() {
     const history: { role: string; content: string }[] = [...messages.map(m => ({ role: m.role, content: m.content })), { role: 'user', content: text }]
 
     try {
-      const response = await sendChatMessage(history)
+      const response: HybridResult = await sendHybridMessage(history, data)
       const assistantMsg: ChatMessage = {
         id: nextId(),
         role: 'assistant',
-        content: response.text,
+        content: response.source === 'nova-core' ? `⚡ ${response.text}` : response.text,
         intent: response.intent,
         data: response.data,
       }
       setMessages(prev => [...prev, assistantMsg])
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : 'Error al conectar con Nova AI'
+      const errorMsg = e instanceof Error ? e.message : 'Error al procesar tu mensaje'
       setMessages(prev => [...prev, { id: nextId(), role: 'assistant', content: `⚠️ ${errorMsg}` }])
     } finally {
       setLoading(false)
@@ -353,6 +366,12 @@ export function NovaAIModal() {
                 <div>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">Hola Jorge 👋</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Nova AI — Tu asistente financiero inteligente</p>
+                  {isOffline && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full mt-0.5">
+                      <WifiOff className="size-2.5" />
+                      Modo sin conexión
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="rounded-2xl bg-white/60 dark:bg-white/[0.08] p-4 mt-3 border border-gray-100 dark:border-white/10">
