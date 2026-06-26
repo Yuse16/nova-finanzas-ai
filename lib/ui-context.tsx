@@ -44,6 +44,9 @@ type UIValue = {
   closeVoice: () => void
   theme: 'light' | 'dark'
   setTheme: (t: 'light' | 'dark') => void
+  showFullSummary: boolean
+  openFullSummary: () => void
+  closeFullSummary: () => void
 }
 
 const UIContext = createContext<UIValue | null>(null)
@@ -67,6 +70,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [tab, setTab] = useState('inicio')
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [theme, setThemeState] = useState<'light' | 'dark'>(getInitialTheme)
+  const [showFullSummary, setShowFullSummary] = useState(false)
 
   // Apply data-theme on mount and on change
   const setTheme = useCallback((t: 'light' | 'dark') => {
@@ -79,10 +83,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const close = useCallback(() => setModal({ kind: 'none' }), [])
   const openVoice = useCallback(() => setVoiceOpen(true), [])
   const closeVoice = useCallback(() => setVoiceOpen(false), [])
+  const openFullSummary = useCallback(() => setShowFullSummary(true), [])
+  const closeFullSummary = useCallback(() => setShowFullSummary(false), [])
 
   const value = useMemo(
-    () => ({ modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice, theme, setTheme }),
-    [modal, open, close, tab, voiceOpen, openVoice, closeVoice, theme, setTheme],
+    () => ({ modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice, theme, setTheme, showFullSummary, openFullSummary, closeFullSummary }),
+    [modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice, theme, setTheme, showFullSummary, openFullSummary, closeFullSummary],
   )
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>
 }
