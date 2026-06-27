@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Image from 'next/image'
 import { Search, SlidersHorizontal } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
@@ -19,7 +18,7 @@ const filters: { label: string; value: 'todos' | MovementType }[] = [
 
 export function MovementsModule() {
   const { data } = useStore()
-  const { open, theme } = useUI()
+  const { open } = useUI()
   const [active, setActive] = useState<'todos' | MovementType>('todos')
 
   const grouped = useMemo(() => {
@@ -53,48 +52,23 @@ export function MovementsModule() {
 
   return (
     <div className="flex flex-col pb-32">
-      <section className="relative h-48 w-screen overflow-hidden -mt-5 left-1/2 -translate-x-1/2">
-        <div className="absolute inset-0">
-          <Image
-            src={theme === 'dark' ? '/montanaobs-horizontal.webp' : '/montanav2-horizontal.webp'}
-            alt=""
-            fill
-            priority
-            aria-hidden
-            className="object-cover"
-            sizes="100vw"
-          />
-        </div>
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%]"
-          style={{
-            background: theme === 'dark'
-              ? 'linear-gradient(to bottom, transparent 0%, #030712 100%)'
-              : 'linear-gradient(to bottom, transparent 0%, white 100%)',
-          }}
-        />
-      </section>
-
-      <div className="flex items-center justify-between px-5 pb-2 pt-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Movimientos</h1>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            aria-label="Buscar"
-            onClick={() => open({ kind: 'search' })}
-            className="grid size-9 place-items-center rounded-xl bg-white shadow-sm dark:bg-gray-900"
-          >
-            <Search className="size-4 text-gray-500 dark:text-gray-400" />
-          </button>
-          <button
-            type="button"
-            aria-label="Filtros"
-            onClick={() => open({ kind: 'filters' })}
-            className="grid size-9 place-items-center rounded-xl bg-white shadow-sm dark:bg-gray-900"
-          >
-            <SlidersHorizontal className="size-4 text-gray-500 dark:text-gray-400" />
-          </button>
-        </div>
+      <div className="flex items-center justify-end gap-2 px-5 pt-4 pb-2">
+        <button
+          type="button"
+          aria-label="Buscar"
+          onClick={() => open({ kind: 'search' })}
+          className="grid size-9 place-items-center rounded-xl bg-white shadow-sm dark:bg-gray-900"
+        >
+          <Search className="size-4 text-gray-500 dark:text-gray-400" />
+        </button>
+        <button
+          type="button"
+          aria-label="Filtros"
+          onClick={() => open({ kind: 'filters' })}
+          className="grid size-9 place-items-center rounded-xl bg-white shadow-sm dark:bg-gray-900"
+        >
+          <SlidersHorizontal className="size-4 text-gray-500 dark:text-gray-400" />
+        </button>
       </div>
 
       <div className="flex gap-2 overflow-x-auto px-5 py-2 no-scrollbar">
