@@ -12,6 +12,8 @@ import { Onboarding } from './onboarding'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
 import { ThemeCustomizationProvider } from '@/context/ThemeCustomizationContext'
+import { PageHeader } from './page-header'
+import type { PageType } from './page-header'
 
 import { TransactionModal } from './transaction-modal'
 import { TransferModal } from './transfer-modal'
@@ -32,10 +34,19 @@ import { BalanceDetailModal } from './balance-detail-modal'
 import { ResetFinancialModal } from './reset-financial-modal'
 import { FinancialSummaryFull } from './financial-summary-full'
 
+function getPageType(pathname: string): PageType | null {
+  const key = pathname.replace('/', '') || 'home'
+  if (['home', 'movimientos', 'cuentas', 'historial', 'insights', 'metas'].includes(key)) {
+    return key as PageType
+  }
+  return null
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, ready } = useStore()
   const { voiceOpen, closeVoice, theme, setTheme, showFullSummary } = useUI()
   const pathname = usePathname()
+  const pageType = getPageType(pathname)
 
   // Apply saved theme on mount
   useEffect(() => {
@@ -82,13 +93,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               exit={{ opacity: 0, filter: 'blur(6px)' }}
               transition={{ duration: 0.3, ease: [0.33, 1, 0.68, 1] }}
             >
-              {pathname !== '/' && pathname !== '/movimientos' && pathname !== '/cuentas' && (
-                <div className="fixed inset-0 -z-10" style={{ backgroundImage: 'var(--bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}>
-                  <div className="absolute inset-0" style={{ background: 'var(--bg-overlay)' }} />
-                </div>
-              )}
-
               <main className="mx-auto flex w-full max-w-lg flex-col gap-6 px-5 pb-40 pt-6">
+                {pageType && <PageHeader page={pageType} />}
                 {children}
               </main>
 
