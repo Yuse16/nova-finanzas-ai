@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Bell } from 'lucide-react'
+import { Bell, User, LogOut } from 'lucide-react'
 import { useUI } from '@/lib/ui-context'
 import { useCustomization } from '@/context/ThemeCustomizationContext'
+import { useAuth } from '@/context/auth-context'
 import { loadNotifications } from '@/lib/notifications'
 import { fmt } from '@/lib/format'
 import { isAccountLiability } from '@/lib/catalog'
@@ -25,7 +26,9 @@ export function PageHeader({ page }: { page: PageType }) {
   const { theme, openFullSummary, open } = useUI()
   const { settings } = useCustomization()
   const { data } = useStore()
+  const { user, signOut } = useAuth()
   const [unread, setUnread] = useState(0)
+  const [showMenu, setShowMenu] = useState(false)
 
   useEffect(() => {
     const update = () => setUnread(loadNotifications().filter((n) => !n.read).length)
@@ -64,7 +67,36 @@ export function PageHeader({ page }: { page: PageType }) {
         }}
       />
 
-      <div className="absolute right-5" style={{ top: 'calc(12px + env(safe-area-inset-top, 0px))' }}>
+      <div className="absolute right-5 flex items-center gap-2" style={{ top: 'calc(12px + env(safe-area-inset-top, 0px))' }}>
+        <div className="relative">
+          <button
+            type="button"
+            aria-label="Usuario"
+            onClick={() => setShowMenu(!showMenu)}
+            className="glass relative grid size-11 place-items-center rounded-2xl active:scale-95 transition-transform"
+          >
+            <User className="size-5" />
+          </button>
+          {showMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+              <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl bg-white p-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-700">
+                <p className="truncate px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                  {user?.email ?? ''}
+                </p>
+                <hr className="my-1 border-gray-200 dark:border-gray-700" />
+                <button
+                  type="button"
+                  onClick={() => { signOut() }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                >
+                  <LogOut className="size-4" />
+                  Cerrar sesión
+                </button>
+              </div>
+            </>
+          )}
+        </div>
         <button
           type="button"
           aria-label="Notificaciones"
