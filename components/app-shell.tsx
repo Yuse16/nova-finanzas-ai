@@ -77,7 +77,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!data.profile || !data.profile.onboarded) {
+  const needsOnboarding =
+    !data.profile ||
+    !data.profile.onboarded ||
+    (data.accounts.length === 0 && !data.profile.accountsSkipped)
+  if (needsOnboarding) {
     return <Onboarding />
   }
 

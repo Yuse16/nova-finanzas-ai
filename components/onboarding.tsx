@@ -201,7 +201,13 @@ export function Onboarding() {
     ]
 
     completeOnboarding(
-      { name: name.trim() || 'Usuario', onboarded: true, createdAt: now, selectedFont: 'system' },
+      {
+        name: name.trim() || 'Usuario',
+        onboarded: true,
+        createdAt: now,
+        selectedFont: 'system',
+        accountsSkipped: accounts.length === 0 ? true : undefined,
+      },
       accounts,
     )
   }

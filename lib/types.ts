@@ -139,7 +139,8 @@ export type UserProfile = {
   name: string
   onboarded: boolean
   createdAt: number
-  selectedFont: string // NEW: Store the selected font preference
+  selectedFont: string
+  accountsSkipped?: boolean
 }
 
 // NEW: Define available font options
