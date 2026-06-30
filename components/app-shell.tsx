@@ -65,6 +65,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     saveNotifications(notifs)
   }, [data, ready])
 
+  if (pathname.startsWith('/auth')) {
+    return <>{children}</>
+  }
+
   if (!ready) {
     return (
       <div className="grid min-h-screen place-items-center bg-background text-foreground">
