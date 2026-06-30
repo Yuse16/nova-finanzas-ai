@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Roboto_Mono, Geist, Geist_Mono } from 'next/font/google' // Import Inter and Roboto_Mono
 import { UIProvider } from '@/lib/ui-context'
+import { AuthProvider } from '@/context/auth-context'
 import { AppShell } from '@/components/app-shell'
 import './globals.css'
 // useStore cannot be imported here as this is a Server Component
@@ -69,11 +70,13 @@ export default function RootLayout({
     <html lang="es" className={fontClasses}>
       {/* Añadir style para safe-area-bottom en el body, y el padding-top lo controlará el div en page.tsx */}
       <body className="font-system antialiased" style={{ paddingBottom: 'var(--sab)' }}>
-        <UIProvider>
-          <AppShell>
-            {children}
-          </AppShell>
-        </UIProvider>
+        <AuthProvider>
+          <UIProvider>
+            <AppShell>
+              {children}
+            </AppShell>
+          </UIProvider>
+        </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -49,8 +49,11 @@ function mapIntent(coreIntent: string): NovaIntent {
 function mapData(data: Record<string, unknown> | null): DetectedData | null {
   if (!data) return null
   return {
-    categoria: data.categoria as string | undefined,
+    concepto: (data.concepto as string) ?? (data.titulo as string) ?? undefined,
     monto: data.monto as number | undefined,
+    tipo: data.tipo as DetectedData['tipo'],
+    categoria: data.categoria as string | undefined,
+    cuenta_hint: data.cuenta_hint as string | null | undefined,
     titulo: data.titulo as string | undefined,
     ingresos: data.ingresos as number | undefined,
     gastos: data.gastos as number | undefined,
@@ -100,7 +103,7 @@ export async function sendHybridMessage(
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 8000)
 
-      const result = await sendChatMessage(messages)
+      const result = await sendChatMessage(messages, data.accounts)
       clearTimeout(timeoutId)
 
       isOnline = true

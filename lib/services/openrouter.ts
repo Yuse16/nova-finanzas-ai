@@ -1,8 +1,11 @@
 export type NovaIntent = 'addExpense' | 'addIncome' | 'analyzeDebt' | 'createGoal' | 'financialAdvice' | 'appQuestion' | 'monthlySummary' | 'subscriptions' | 'simulation' | 'unknown'
 
 export type DetectedData = {
-  categoria?: string
+  concepto?: string
   monto?: number
+  tipo?: 'gasto' | 'ingreso' | 'prestamo' | 'me_prestaron'
+  categoria?: string
+  cuenta_hint?: string | null
   titulo?: string
   ingresos?: number
   gastos?: number
@@ -28,44 +31,63 @@ function parseIntent(text: string): { text: string; intent: NovaIntent; data: De
   let data: DetectedData | null = null
   let intent: NovaIntent = 'unknown'
 
-  const intentMatch = text.match(/\[DETECTED:(\w+)\]/)
-  if (intentMatch) {
-    intent = intentMatch[1] as NovaIntent
-    const lines = text.split('\n')
-    for (const line of lines) {
-      const catMatch = line.match(/^Categoría:\s*(.+)$/i)
-      const montoMatch = line.match(/^Monto:\s*\$?([\d,]+)/i)
-      const tituloMatch = line.match(/^Título:\s*(.+)$/i)
-      const ingresosMatch = line.match(/^Ingresos:\s*\$?([\d,]+)/i)
-      const gastosMatch = line.match(/^Gastos:\s*\$?([\d,]+)/i)
-      const ahorroMatch = line.match(/^Ahorro:\s*\$?([\d,]+)/i)
-      const periodoMatch = line.match(/^Periodo:\s*(.+)$/i)
-      const escenarioMatch = line.match(/^Escenario:\s*(.+)$/i)
-      const resultadoMatch = line.match(/^Resultado:\s*(.+)$/i)
+  // Try to find a JSON block between ```json and ```
+  const jsonBlockMatch = text.match(/```json\s*([\s\S]*?)```/)
+  let jsonStr: string | null = null
 
-      if (!data) data = {}
-      if (catMatch) data.categoria = catMatch[1].trim()
-      if (montoMatch) data.monto = parseInt(montoMatch[1].replace(/,/g, ''), 10)
-      if (tituloMatch) data.titulo = tituloMatch[1].trim()
-      if (ingresosMatch) data.ingresos = parseInt(ingresosMatch[1].replace(/,/g, ''), 10)
-      if (gastosMatch) data.gastos = parseInt(gastosMatch[1].replace(/,/g, ''), 10)
-      if (ahorroMatch) data.ahorro = parseInt(ahorroMatch[1].replace(/,/g, ''), 10)
-      if (periodoMatch) data.periodo = periodoMatch[1].trim()
-      if (escenarioMatch) data.escenario = escenarioMatch[1].trim()
-      if (resultadoMatch) data.resultado = resultadoMatch[1].trim()
+  if (jsonBlockMatch) {
+    jsonStr = jsonBlockMatch[1].trim()
+  } else {
+    // Fallback: try to find a standalone JSON object at the end of the text
+    const jsonObjMatch = text.match(/\{[\s\S]*"mensaje"[\s\S]*\}/)
+    if (jsonObjMatch) {
+      jsonStr = jsonObjMatch[0]
     }
-    // Strip DETECTED blocks from displayed text
-    text = text.replace(/\[DETECTED:\w+\]\n?/g, '').replace(/^(?:Categoría|Monto|Título|Ingresos|Gastos|Ahorro|Periodo|Escenario|Resultado):.*$/gm, '').trim()
   }
+
+  if (jsonStr) {
+    try {
+      const parsed = JSON.parse(jsonStr)
+      data = {}
+
+      if (parsed.concepto) data.concepto = parsed.concepto
+      if (parsed.monto !== undefined) data.monto = parsed.monto
+      if (parsed.tipo) data.tipo = parsed.tipo
+      if (parsed.categoria) data.categoria = parsed.categoria
+      if (parsed.cuenta_hint !== undefined) data.cuenta_hint = parsed.cuenta_hint
+
+      // Determine intent based on tipo
+      if (parsed.tipo === 'gasto' || parsed.tipo === 'prestamo') {
+        intent = 'addExpense'
+      } else if (parsed.tipo === 'ingreso' || parsed.tipo === 'me_prestaron') {
+        intent = 'addIncome'
+      }
+
+      // Use mensaje as the display text, strip the JSON block
+      if (parsed.mensaje) {
+        text = parsed.mensaje
+      } else {
+        text = text.replace(/```json[\s\S]*?```/g, '').trim()
+      }
+    } catch {
+      // JSON parse failed, fall through to clean up
+    }
+  }
+
+  // Fallback: strip any remaining JSON blocks from display text
+  text = text.replace(/```json[\s\S]*?```/g, '').trim()
 
   return { text, intent, data }
 }
 
-export async function sendChatMessage(messages: { role: string; content: string }[]): Promise<AiResponse> {
+export async function sendChatMessage(
+  messages: { role: string; content: string }[],
+  accounts?: { id: string; name: string; type: string; bank?: string | null }[],
+): Promise<AiResponse> {
   const res = await fetch('/api/ai/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, accounts }),
   })
 
   if (!res.ok) {

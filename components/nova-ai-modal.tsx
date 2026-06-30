@@ -61,6 +61,12 @@ export function NovaAIModal() {
   const [showChips, setShowChips] = useState(true)
   const [listening, setListening] = useState(false)
   const [showVoiceMenu, setShowVoiceMenu] = useState(false)
+  const [pendingAction, setPendingAction] = useState<{
+    msg: ChatMessage
+    data: DetectedData
+    type: 'addExpense' | 'addIncome'
+  } | null>(null)
+  const [showAccountPicker, setShowAccountPicker] = useState(false)
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isHoldingRef = useRef(false)
   const didHoldRef = useRef(false)
@@ -214,14 +220,51 @@ export function NovaAIModal() {
     handleSend(prompt)
   }
 
-  function confirmIntent(msg: ChatMessage) {
-    if (msg.intent === 'addExpense' && msg.data) {
+  function resolveAccount(hint: string | null | undefined): string | null | '__MULTIPLE__' {
+    if (!hint) return null
+
+    const hintLC = hint.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+    // Match by account type
+    const typeMap: Record<string, string> = {
+      debito: 'debito',
+      débito: 'debito',
+      credito: 'credito',
+      crédito: 'credito',
+      efectivo: 'efectivo',
+      ahorro: 'ahorro',
+      inversion: 'inversion',
+      inversión: 'inversion',
+    }
+    for (const [key, type] of Object.entries(typeMap)) {
+      if (hintLC.includes(key)) {
+        const matches = data.accounts.filter((a) => a.type === type)
+        if (matches.length === 1) return matches[0].id
+        if (matches.length > 1) return '__MULTIPLE__'
+      }
+    }
+
+    // Match by account name or bank
+    const matchesByName = data.accounts.filter((a) => {
+      const normalizedName = a.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      const normalizedBank = (a.bank ?? '').toLowerCase()
+      return normalizedName.includes(hintLC) || normalizedBank.includes(hintLC)
+    })
+    if (matchesByName.length === 1) return matchesByName[0].id
+    if (matchesByName.length > 1) return '__MULTIPLE__'
+
+    return null
+  }
+
+  function doSaveAction(msg: ChatMessage, accountId: string) {
+    if (!msg.data) return
+    if (msg.intent === 'addExpense') {
       addMovement({
-        title: msg.data.titulo || 'Gasto',
-        category: msg.data.categoria || 'Otros',
+        title: msg.data.concepto || 'Gasto',
+        category: msg.data.categoria || 'General',
         amount: msg.data.monto || 0,
-        type: 'gasto',
-        accountId: data.accounts[0]?.id || '',
+        type: msg.data.tipo === 'prestamo' ? 'prestamo' : 'gasto',
+        accountId,
         toAccountId: null,
         method: 'Otro',
         date: new Date().toISOString(),
@@ -232,13 +275,13 @@ export function NovaAIModal() {
       })
       setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, confirmed: true } : m))
     }
-    if (msg.intent === 'addIncome' && msg.data) {
+    if (msg.intent === 'addIncome') {
       addMovement({
-        title: msg.data.titulo || 'Ingreso',
+        title: msg.data.concepto || 'Ingreso',
         category: 'Ingreso',
         amount: msg.data.monto || 0,
         type: 'ingreso',
-        accountId: data.accounts[0]?.id || '',
+        accountId,
         toAccountId: null,
         method: 'Otro',
         date: new Date().toISOString(),
@@ -251,7 +294,7 @@ export function NovaAIModal() {
     }
     if (msg.intent === 'createGoal' && msg.data) {
       addGoal({
-        title: msg.data.titulo || 'Meta',
+        title: msg.data.concepto || msg.data.titulo || 'Meta',
         saved: 0,
         target: msg.data.monto || 0,
         date: new Date().toISOString().split('T')[0],
@@ -260,28 +303,89 @@ export function NovaAIModal() {
       })
       setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, confirmed: true } : m))
     }
+    setPendingAction(null)
+    setShowAccountPicker(false)
+  }
+
+  function confirmIntent(msg: ChatMessage) {
+    if (!msg.data) return
+
+    if (msg.intent === 'createGoal') {
+      // Goals don't need account selection
+      return doSaveAction(msg, '')
+    }
+
+    const resolvedId = resolveAccount(msg.data.cuenta_hint)
+    if (resolvedId === '__MULTIPLE__' || resolvedId === null) {
+      setPendingAction({ msg, data: msg.data, type: msg.intent as 'addExpense' | 'addIncome' })
+      setShowAccountPicker(true)
+      return
+    }
+    doSaveAction(msg, resolvedId)
+  }
+
+  function handleAccountSelect(accountId: string) {
+    if (!pendingAction) return
+    doSaveAction(pendingAction.msg, accountId)
   }
 
   function intentCard(msg: ChatMessage) {
     if (!msg.data || msg.confirmed) return null
 
+    const isPending = pendingAction?.msg.id === msg.id
+    const accountPicker = isPending && showAccountPicker ? (
+      <div className="mt-2 rounded-xl bg-white/70 dark:bg-white/[0.06] border border-gray-100 dark:border-white/10 p-2">
+        <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          Selecciona una cuenta
+        </p>
+        <div className="flex flex-col gap-0.5">
+          {data.accounts.length === 0 ? (
+            <p className="px-2 py-2 text-xs text-gray-400 dark:text-gray-500">No hay cuentas disponibles</p>
+          ) : (
+            data.accounts.map((acc) => (
+              <button
+                key={acc.id}
+                type="button"
+                onClick={() => handleAccountSelect(acc.id)}
+                className="flex items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-white/[0.08] active:scale-[0.98] transition-all"
+              >
+                <span
+                  className="grid size-7 shrink-0 place-items-center rounded-lg text-white text-[10px] font-bold"
+                  style={{ background: acc.color || '#6b7280' }}
+                >
+                  {acc.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="font-medium">{acc.name}</span>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    ) : null
+
     if (msg.intent === 'addExpense') {
       return (
-        <div className="mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border border-red-100 dark:border-red-900/30 p-3">
-          <p className="text-xs font-semibold text-red-500 uppercase tracking-wider">Gasto detectado</p>
-          <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">Categoría: <span className="font-medium">{msg.data.categoria}</span></p>
-          <p className="text-sm text-gray-700 dark:text-gray-200">Monto: <span className="font-medium">${fmt(msg.data.monto || 0)}</span></p>
-          <button type="button" onClick={() => confirmIntent(msg)} className="mt-2 w-full rounded-lg bg-red-500 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform">Guardar gasto</button>
+        <div>
+          <div className="mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border border-red-100 dark:border-red-900/30 p-3">
+            <p className="text-xs font-semibold text-red-500 uppercase tracking-wider">Gasto detectado</p>
+            <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">Categoría: <span className="font-medium">{msg.data.categoria}</span></p>
+            <p className="text-sm text-gray-700 dark:text-gray-200">Monto: <span className="font-medium">${fmt(msg.data.monto || 0)}</span></p>
+            <button type="button" onClick={() => confirmIntent(msg)} className="mt-2 w-full rounded-lg bg-red-500 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform">Guardar gasto</button>
+          </div>
+          {accountPicker}
         </div>
       )
     }
 
     if (msg.intent === 'addIncome') {
       return (
-        <div className="mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border border-green-100 dark:border-green-900/30 p-3">
-          <p className="text-xs font-semibold text-green-500 uppercase tracking-wider">Ingreso detectado</p>
-          <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">Monto: <span className="font-medium">${fmt(msg.data.monto || 0)}</span></p>
-          <button type="button" onClick={() => confirmIntent(msg)} className="mt-2 w-full rounded-lg bg-green-500 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform">Guardar ingreso</button>
+        <div>
+          <div className="mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border border-green-100 dark:border-green-900/30 p-3">
+            <p className="text-xs font-semibold text-green-500 uppercase tracking-wider">Ingreso detectado</p>
+            <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">Monto: <span className="font-medium">${fmt(msg.data.monto || 0)}</span></p>
+            <button type="button" onClick={() => confirmIntent(msg)} className="mt-2 w-full rounded-lg bg-green-500 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform">Guardar ingreso</button>
+          </div>
+          {accountPicker}
         </div>
       )
     }
