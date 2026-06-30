@@ -52,10 +52,10 @@ export default function SignupPage() {
 
   if (confirmationSent) {
     return (
-      <div className="relative min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="relative flex h-dvh flex-col bg-gray-50 dark:bg-gray-950">
         <MountainBackground />
-        <div className="relative z-10 mx-auto flex min-h-screen max-w-sm flex-col justify-center px-5">
-          <div className="rounded-2xl bg-white/90 p-6 text-center shadow-lg backdrop-blur dark:bg-gray-900/90">
+        <div className="relative z-10 flex flex-1 flex-col justify-center px-5">
+          <div className="mx-auto w-full max-w-sm rounded-2xl bg-white/90 p-6 text-center shadow-lg backdrop-blur dark:bg-gray-900/90">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
               <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
@@ -81,10 +81,10 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="relative flex h-dvh flex-col bg-gray-50 dark:bg-gray-950">
       <MountainBackground />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-sm flex-col justify-center px-5">
-        <div className="rounded-2xl bg-white/90 p-6 shadow-lg backdrop-blur dark:bg-gray-900/90">
+      <div className="relative z-10 flex flex-1 flex-col justify-center px-5">
+        <div className="mx-auto w-full max-w-sm rounded-2xl bg-white/90 p-6 shadow-lg backdrop-blur dark:bg-gray-900/90">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Crear cuenta
