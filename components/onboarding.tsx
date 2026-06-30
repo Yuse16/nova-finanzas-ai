@@ -260,10 +260,10 @@ export function Onboarding() {
               <div className="glass-subtle mb-6 grid size-16 place-items-center rounded-3xl">
                 <User className="size-8 text-[oklch(0.82_0.16_90)]" />
               </div>
-              <h1 className="text-2xl font-semibold tracking-tight text-balance text-gray-900 dark:text-white">
+              <h1 className="text-2xl font-semibold tracking-tight text-balance text-white">
                 ¿Sigues siendo {previousName}?
               </h1>
-              <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300 text-pretty">
+              <p className="mt-3 text-sm leading-relaxed text-white/80 text-pretty">
                 Identifícate para continuar con tu nuevo inicio financiero.
               </p>
 
@@ -278,7 +278,7 @@ export function Onboarding() {
                       }}
                       className="rounded-2xl bg-white/40 p-4 text-left backdrop-blur-sm ring-1 ring-white/30 transition-all active:scale-[0.98] dark:bg-white/[0.06] dark:ring-white/10"
                     >
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <span className="text-sm font-semibold text-white">
                         Sí, sigo siendo {previousName}
                       </span>
                     </button>
@@ -287,7 +287,7 @@ export function Onboarding() {
                       onClick={() => setShowNameInput(true)}
                       className="rounded-2xl bg-white/30 p-4 text-left backdrop-blur-sm transition-all active:scale-[0.98] dark:bg-white/[0.04]"
                     >
-                      <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                      <span className="text-sm font-semibold text-white/80">
                         No, quiero usar otro nombre
                       </span>
                     </button>
@@ -331,10 +331,10 @@ export function Onboarding() {
               <div className="glass-subtle mb-6 grid size-16 place-items-center rounded-3xl">
                 <Sparkles className="size-8 text-[oklch(0.82_0.16_90)]" />
               </div>
-              <h1 className="text-3xl font-semibold tracking-tight text-balance text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-semibold tracking-tight text-balance text-white">
                 Bienvenido a Nova Finanzas AI
               </h1>
-              <p className="mt-3 text-base leading-relaxed text-gray-600 dark:text-gray-300 text-pretty">
+              <p className="mt-3 text-base leading-relaxed text-white/80 text-pretty">
                 Tu centro de control financiero personal. Registra gastos por
                 voz, controla tus cuentas y alcanza tus metas. Todo se guarda en
                 tu dispositivo.
@@ -378,10 +378,10 @@ export function Onboarding() {
               exit={{ opacity: 0, x: -24 }}
               className="flex flex-1 flex-col"
             >
-              <h1 className="text-2xl font-semibold tracking-tight text-balance text-gray-900 dark:text-white">
+              <h1 className="text-2xl font-semibold tracking-tight text-balance text-white">
                 ¿Cuánto tienes hoy?
               </h1>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300 text-pretty">
+              <p className="mt-2 text-sm leading-relaxed text-white/80 text-pretty">
                 Registra los lugares donde tienes dinero actualmente. Puedes
                 dejar en blanco lo que no uses.
               </p>
@@ -407,7 +407,7 @@ export function Onboarding() {
                         >
                           <Icon className="size-5 text-white" />
                         </span>
-                        <span className="min-w-0 flex-1 text-sm font-semibold text-gray-900 dark:text-white">
+                        <span className="min-w-0 flex-1 text-sm font-semibold text-white">
                           {p.label}
                         </span>
                         <div className="relative w-28">
@@ -620,10 +620,10 @@ export function Onboarding() {
                         >
                           <Icon className="size-4 text-white" />
                         </span>
-                        <span className="min-w-0 flex-1 text-sm font-semibold text-gray-900 dark:text-white">
+                        <span className="min-w-0 flex-1 text-sm font-semibold text-white">
                           {ca.name}
                         </span>
-                        <span className="text-sm font-medium tabular-nums text-gray-900 dark:text-white">
+                        <span className="text-sm font-medium tabular-nums text-white">
                           {fmt(ca.balance)}
                         </span>
                         <button
@@ -656,7 +656,7 @@ export function Onboarding() {
                 </button>
               ) : (
                 <div className="mt-3 flex flex-col gap-4 rounded-2xl bg-white/40 p-4 backdrop-blur-sm ring-1 ring-white/30 dark:bg-white/[0.06] dark:ring-white/10">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <p className="text-sm font-semibold text-white">
                     Nueva cuenta
                   </p>
 
@@ -948,10 +948,10 @@ export function Onboarding() {
               exit={{ opacity: 0, x: -24 }}
               className="flex flex-1 flex-col"
             >
-              <h1 className="text-2xl font-semibold tracking-tight text-balance text-gray-900 dark:text-white">
+              <h1 className="text-2xl font-semibold tracking-tight text-balance text-white">
                 Tu balance global
               </h1>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300 text-pretty">
+              <p className="mt-2 text-sm leading-relaxed text-white/80 text-pretty">
                 Esto es lo que tienes actualmente.
               </p>
 
@@ -959,7 +959,7 @@ export function Onboarding() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Dinero disponible
                 </p>
-                <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums text-gray-900 dark:text-white">
+                <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums text-white">
                   {fmt(totalBalance)}
                 </p>
 
@@ -992,7 +992,7 @@ export function Onboarding() {
                             className={`font-medium tabular-nums ${
                               isCredito
                                 ? 'text-red-500 dark:text-red-400'
-                                : 'text-gray-900 dark:text-white'
+                                : 'text-white'
                             }`}
                           >
                             {isCredito ? '-' : ''}
@@ -1021,7 +1021,7 @@ export function Onboarding() {
                               {ca.name}
                             </span>
                           </div>
-                          <span className="font-medium tabular-nums text-gray-900 dark:text-white">
+                          <span className="font-medium tabular-nums text-white">
                             {fmt(ca.balance)}
                           </span>
                         </li>
