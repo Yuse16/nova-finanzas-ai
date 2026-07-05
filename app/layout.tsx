@@ -25,26 +25,29 @@ const roboto_mono = Roboto_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Nova Finanzas AI',
+  title: 'Nova Finanzas',
   description:
     'Tu centro de control financiero personal con inteligencia artificial. Registra gastos por voz, controla tus cuentas y alcanza tus metas.',
   generator: 'v0.app',
-  manifest: '/manifest.json',
+  manifest: '/manifest.json?v=2',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'Nova Finanzas',
   },
   icons: [
-    { rel: 'icon', url: '/icon.webp', type: 'image/webp' },
-    { rel: 'apple-touch-icon', url: '/icon.webp', type: 'image/webp' },
-    { rel: 'shortcut icon', url: '/icon.webp', type: 'image/webp' },
+    { rel: 'icon', url: '/icon.webp?v=2', type: 'image/webp' },
+    { rel: 'apple-touch-icon', url: '/icon.webp?v=2', type: 'image/webp' },
+    { rel: 'shortcut icon', url: '/icon.webp?v=2', type: 'image/webp' },
   ],
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
 }
 
 export const viewport: Viewport = {
   colorScheme: 'light dark',
-  themeColor: '#4a7fd6',
+  themeColor: '#ffffff',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
