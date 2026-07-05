@@ -27,6 +27,15 @@ export type AiResponse = {
   data: DetectedData | null
 }
 
+function sanitizeConcepto(raw: string): string {
+  return raw
+    .replace(/\b\d+([.,]\d+)?\s*(pesos?|mxn|dólares?|dolares?|usd)\b/gi, '')
+    .replace(/\b(un|una|unos|unas)\s+peso[s]?\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .replace(/^./, (c) => c.toUpperCase())
+}
+
 function parseIntent(text: string): { text: string; intent: NovaIntent; data: DetectedData | null } {
   let data: DetectedData | null = null
   let intent: NovaIntent = 'unknown'
@@ -50,7 +59,7 @@ function parseIntent(text: string): { text: string; intent: NovaIntent; data: De
       const parsed = JSON.parse(jsonStr)
       data = {}
 
-      if (parsed.concepto) data.concepto = parsed.concepto
+      if (parsed.concepto) data.concepto = sanitizeConcepto(parsed.concepto)
       if (parsed.monto !== undefined) data.monto = parsed.monto
       if (parsed.tipo) data.tipo = parsed.tipo
       if (parsed.categoria) data.categoria = parsed.categoria

@@ -89,6 +89,10 @@ Responde con un mensaje conversacional breve y natural, y al final del mensaje i
 
 REGLAS DE EXTRACCIÓN:
 - **concepto**: extrae SOLO el objeto/acción principal. Ej: "Cigarros", "Hamburguesa", "Gasolina", "Pago a Violeta", "Nómina". NUNCA incluyas montos, nombres de cuentas, ni palabras como "gasto" o "compra".
+
+Ejemplos:
+- "Gasté un peso en papas con débito" → concepto: "Papas", monto: 1, cuenta_hint: "débito"
+- "1 peso en papas" → concepto: "Papas", monto: 1, cuenta_hint: null
 - **monto**: extrae el número. Si dice "150 pesos", monto es 150. Si no hay monto, devuelve 0.
 - **tipo**: "gasto" para compras/gastos, "ingreso" para dinero que recibe, "prestamo" para dinero que prestó a alguien, "me_prestaron" para dinero que le prestaron.
 - **categoria**: usa las 10 categorías exactas de arriba. Si no estás seguro, usa "General".
