@@ -3,7 +3,7 @@
 @import 'shadcn/tailwind.css';
 
 html, body {
-  background: #f9fafb;
+  background: #dbeafe;
   min-height: 100%;
   overscroll-behavior-y: none;
 }
@@ -142,7 +142,7 @@ html[data-theme="dark"], html.dark {
   --bg-image: url('/montanav2.webp');
   --bg-image-horizontal: url('/montanav2-horizontal.webp');
   --hero-fade: linear-gradient(to bottom, transparent 0%, white 100%);
-  --bg-overlay: oklch(0.35 0.12 260 / 25%);
+  --bg-overlay: linear-gradient(to bottom, oklch(0.35 0.12 260 / 10%) 0%, oklch(0.35 0.12 260 / 50%) 100%);
 }
 
 html[data-theme="dark"] {
