@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon.webp?v=2",
+      "src": "/icon.webp?v=3",
       "sizes": "192x192",
       "type": "image/webp",
       "purpose": "any"
     },
     {
-      "src": "/icon.webp?v=2",
+      "src": "/icon.webp?v=3",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "any maskable"

@@ -294,14 +294,18 @@ export function Onboarding() {
                   </>
                 ) : (
                   <div className="flex flex-col gap-3">
-                    <Field label="Nuevo nombre">
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-sm font-medium text-white/90">
+                        Nuevo nombre
+                      </span>
                       <GlassInput
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Tu nombre"
                         autoFocus
+                        className="bg-white/20 text-white placeholder:text-white/60 border border-white/30"
                       />
-                    </Field>
+                    </label>
                     <GlassButton
                       onClick={() => setStep(1)}
                       disabled={!name.trim()}
@@ -341,14 +345,18 @@ export function Onboarding() {
               </p>
 
               <div className="mt-8">
-                <Field label="¿Cómo te llamas?">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-sm font-medium text-white/90">
+                    ¿Cómo te llamas?
+                  </span>
                   <GlassInput
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Tu nombre"
                     autoFocus
+                    className="bg-white/20 text-white placeholder:text-white/60 border border-white/30"
                   />
-                </Field>
+                </label>
               </div>
 
               <div className="mt-auto flex flex-col gap-3 pt-8">
