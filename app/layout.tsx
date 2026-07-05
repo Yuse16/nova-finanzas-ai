@@ -36,8 +36,9 @@ export const metadata: Metadata = {
     title: 'Nova Finanzas',
   },
   icons: [
-    { rel: 'apple-touch-icon', url: '/apple-touch-icon.png' }, // Apuntará al nuevo icono
-    { rel: 'icon', url: '/favicon.ico' }, // Apuntará al nuevo icono
+    { rel: 'icon', url: '/icon.webp', type: 'image/webp' },
+    { rel: 'apple-touch-icon', url: '/icon.webp', type: 'image/webp' },
+    { rel: 'shortcut icon', url: '/icon.webp', type: 'image/webp' },
   ],
 }
 
