@@ -56,6 +56,7 @@ export function Onboarding() {
   const { theme, setTheme } = useUI()
   const previousName = getPreviousNameFromSnapshot()
   const isFromReset = previousName !== null
+  const isDark = theme === 'dark'
 
   useEffect(() => {
     const stored = localStorage.getItem('nova-finanzas:theme')
@@ -230,16 +231,29 @@ export function Onboarding() {
         />
       </div>
 
-      <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-10 pt-[max(env(safe-area-inset-top),2rem)]">
+      <main
+        className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-10 pt-[max(env(safe-area-inset-top),2rem)]"
+        style={{
+          '--onboarding-text': isDark ? '#fff' : '#020617',
+          '--onboarding-text-secondary': isDark ? 'rgba(255,255,255,0.8)' : '#334155',
+          '--onboarding-placeholder': isDark ? 'rgba(255,255,255,0.6)' : '#64748b',
+          '--onboarding-input-bg': isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)',
+          '--onboarding-input-border': isDark ? 'rgba(255,255,255,0.3)' : 'rgba(203,213,225,0.6)',
+          '--onboarding-progress-fill': isDark ? '#fff' : '#020617',
+          '--onboarding-progress-track': isDark ? 'rgba(255,255,255,0.15)' : 'rgba(148,163,184,0.3)',
+          '--onboarding-card-bg': isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)',
+          '--onboarding-muted': isDark ? '#9ca3af' : '#64748b',
+        } as React.CSSProperties}
+      >
         {/* progress */}
         <div className="mb-8 flex gap-2 pt-4">
           {Array.from({ length: totalSteps }, (_, i) => i).map((i) => (
             <div
               key={i}
-              className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/15"
+              className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--onboarding-progress-track)]"
             >
-              <motion.div
-                className="h-full rounded-full bg-white"
+                <motion.div
+                className="h-full rounded-full bg-[var(--onboarding-progress-fill)]"
                 initial={false}
                 animate={{ width: step >= i ? '100%' : '0%' }}
                 transition={{ duration: 0.4 }}
@@ -260,10 +274,10 @@ export function Onboarding() {
               <div className="glass-subtle mb-6 grid size-16 place-items-center rounded-3xl">
                 <User className="size-8 text-[oklch(0.82_0.16_90)]" />
               </div>
-              <h1 className="text-2xl font-semibold tracking-tight text-balance text-white">
+              <h1 className="text-2xl font-semibold tracking-tight text-balance text-[var(--onboarding-text)]">
                 ¿Sigues siendo {previousName}?
               </h1>
-              <p className="mt-3 text-sm leading-relaxed text-white/80 text-pretty">
+              <p className="mt-3 text-sm leading-relaxed text-[var(--onboarding-text-secondary)] text-pretty">
                 Identifícate para continuar con tu nuevo inicio financiero.
               </p>
 
@@ -278,7 +292,7 @@ export function Onboarding() {
                       }}
                       className="rounded-2xl bg-white/40 p-4 text-left backdrop-blur-sm ring-1 ring-white/30 transition-all active:scale-[0.98] dark:bg-white/[0.06] dark:ring-white/10"
                     >
-                      <span className="text-sm font-semibold text-white">
+                      <span className="text-sm font-semibold text-[var(--onboarding-text)]">
                         Sí, sigo siendo {previousName}
                       </span>
                     </button>
@@ -287,7 +301,7 @@ export function Onboarding() {
                       onClick={() => setShowNameInput(true)}
                       className="rounded-2xl bg-white/30 p-4 text-left backdrop-blur-sm transition-all active:scale-[0.98] dark:bg-white/[0.04]"
                     >
-                      <span className="text-sm font-semibold text-white/80">
+                      <span className="text-sm font-semibold text-[var(--onboarding-text-secondary)]">
                         No, quiero usar otro nombre
                       </span>
                     </button>
@@ -295,7 +309,7 @@ export function Onboarding() {
                 ) : (
                   <div className="flex flex-col gap-3">
                     <label className="flex flex-col gap-1.5">
-                      <span className="text-sm font-medium text-white/90">
+                      <span className="text-sm font-medium text-[var(--onboarding-text-label)]">
                         Nuevo nombre
                       </span>
                       <GlassInput
@@ -303,7 +317,7 @@ export function Onboarding() {
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Tu nombre"
                         autoFocus
-                        className="bg-white/20 text-white placeholder:text-white/60 border border-white/30"
+                        className="bg-[var(--onboarding-input-bg)] text-[var(--onboarding-text)] placeholder:text-[var(--onboarding-placeholder)] border border-[var(--onboarding-input-border)]"
                       />
                     </label>
                     <GlassButton
@@ -335,10 +349,10 @@ export function Onboarding() {
               <div className="glass-subtle mb-6 grid size-16 place-items-center rounded-3xl">
                 <Sparkles className="size-8 text-[oklch(0.82_0.16_90)]" />
               </div>
-              <h1 className="text-3xl font-semibold tracking-tight text-balance text-white">
+              <h1 className="text-3xl font-semibold tracking-tight text-balance text-[var(--onboarding-text)]">
                 Bienvenido a Nova Finanzas AI
               </h1>
-              <p className="mt-3 text-base leading-relaxed text-white/80 text-pretty">
+              <p className="mt-3 text-base leading-relaxed text-[var(--onboarding-text-secondary)] text-pretty">
                 Tu centro de control financiero personal. Registra gastos por
                 voz, controla tus cuentas y alcanza tus metas. Todo se guarda en
                 tu dispositivo.
@@ -346,7 +360,7 @@ export function Onboarding() {
 
               <div className="mt-8">
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-sm font-medium text-white/90">
+                  <span className="text-sm font-medium text-[var(--onboarding-text-label)]">
                     ¿Cómo te llamas?
                   </span>
                   <GlassInput
@@ -354,7 +368,7 @@ export function Onboarding() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Tu nombre"
                     autoFocus
-                    className="bg-white/20 text-white placeholder:text-white/60 border border-white/30"
+                    className="bg-[var(--onboarding-input-bg)] text-[var(--onboarding-text)] placeholder:text-[var(--onboarding-placeholder)] border border-[var(--onboarding-input-border)]"
                   />
                 </label>
               </div>
@@ -386,10 +400,10 @@ export function Onboarding() {
               exit={{ opacity: 0, x: -24 }}
               className="flex flex-1 flex-col"
             >
-              <h1 className="text-2xl font-semibold tracking-tight text-balance text-white">
+              <h1 className="text-2xl font-semibold tracking-tight text-balance text-[var(--onboarding-text)]">
                 ¿Cuánto tienes hoy?
               </h1>
-              <p className="mt-2 text-sm leading-relaxed text-white/80 text-pretty">
+              <p className="mt-2 text-sm leading-relaxed text-[var(--onboarding-text-secondary)] text-pretty">
                 Registra los lugares donde tienes dinero actualmente. Puedes
                 dejar en blanco lo que no uses.
               </p>
@@ -415,7 +429,7 @@ export function Onboarding() {
                         >
                           <Icon className="size-5 text-white" />
                         </span>
-                        <span className="min-w-0 flex-1 text-sm font-semibold text-white">
+                        <span className="min-w-0 flex-1 text-sm font-semibold text-[var(--onboarding-text)]">
                           {p.label}
                         </span>
                         <div className="relative w-28">
@@ -628,10 +642,10 @@ export function Onboarding() {
                         >
                           <Icon className="size-4 text-white" />
                         </span>
-                        <span className="min-w-0 flex-1 text-sm font-semibold text-white">
+                        <span className="min-w-0 flex-1 text-sm font-semibold text-[var(--onboarding-text)]">
                           {ca.name}
                         </span>
-                        <span className="text-sm font-medium tabular-nums text-white">
+                        <span className="text-sm font-medium tabular-nums text-[var(--onboarding-text)]">
                           {fmt(ca.balance)}
                         </span>
                         <button
@@ -664,7 +678,7 @@ export function Onboarding() {
                 </button>
               ) : (
                 <div className="mt-3 flex flex-col gap-4 rounded-2xl bg-white/40 p-4 backdrop-blur-sm ring-1 ring-white/30 dark:bg-white/[0.06] dark:ring-white/10">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-[var(--onboarding-text)]">
                     Nueva cuenta
                   </p>
 
@@ -956,10 +970,10 @@ export function Onboarding() {
               exit={{ opacity: 0, x: -24 }}
               className="flex flex-1 flex-col"
             >
-              <h1 className="text-2xl font-semibold tracking-tight text-balance text-white">
+              <h1 className="text-2xl font-semibold tracking-tight text-balance text-[var(--onboarding-text)]">
                 Tu balance global
               </h1>
-              <p className="mt-2 text-sm leading-relaxed text-white/80 text-pretty">
+              <p className="mt-2 text-sm leading-relaxed text-[var(--onboarding-text-secondary)] text-pretty">
                 Esto es lo que tienes actualmente.
               </p>
 
@@ -967,7 +981,7 @@ export function Onboarding() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Dinero disponible
                 </p>
-                <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums text-white">
+                <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums text-[var(--onboarding-text)]">
                   {fmt(totalBalance)}
                 </p>
 
@@ -1000,7 +1014,7 @@ export function Onboarding() {
                             className={`font-medium tabular-nums ${
                               isCredito
                                 ? 'text-red-500 dark:text-red-400'
-                                : 'text-white'
+                                : 'text-[var(--onboarding-text)]'
                             }`}
                           >
                             {isCredito ? '-' : ''}
@@ -1029,7 +1043,7 @@ export function Onboarding() {
                               {ca.name}
                             </span>
                           </div>
-                          <span className="font-medium tabular-nums text-white">
+                          <span className="font-medium tabular-nums text-[var(--onboarding-text)]">
                             {fmt(ca.balance)}
                           </span>
                         </li>
