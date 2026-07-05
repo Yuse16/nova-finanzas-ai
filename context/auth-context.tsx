@@ -23,7 +23,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
+    console.log('[AUTH] AuthProvider montado, chequeando sesión existente...')
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[AUTH] getSession resultado:', session ? `Sesión activa para ${session.user.email}` : 'Sin sesión')
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
@@ -31,13 +33,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[AUTH] onAuthStateChange evento:', event, session ? `usuario ${session.user.email}` : 'sin sesión')
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      console.log('[AUTH] AuthProvider desmontando')
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {

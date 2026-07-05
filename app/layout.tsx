@@ -69,7 +69,7 @@ export default function RootLayout({
     // Aplicar las clases de fuente generadas directamente al html
     <html lang="es" className={fontClasses}>
       {/* Añadir style para safe-area-bottom en el body, y el padding-top lo controlará el div en page.tsx */}
-      <body className="font-system antialiased" style={{ paddingBottom: 'var(--sab)' }}>
+      <body className="font-system antialiased" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <AuthProvider>
           <UIProvider>
             <AppShell>

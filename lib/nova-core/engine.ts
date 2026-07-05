@@ -31,12 +31,13 @@ export async function processOffline(
 
   switch (match.intent) {
     case 'addExpense': {
-      const category = match.entities.category || 'Otros'
+      const category = match.entities.category || 'General'
       const title = match.entities.title || `Gasto en ${category}`
+      const account = match.entities.account as string | undefined
       return {
         text: `✅ He detectado un gasto:\n• **${title}**\n• Categoría: ${category}\n• Monto: $${fmt(match.entities.amount || 0)}\n\n¿Confirmo?`,
         intent: 'addExpense',
-        data: { categoria: category, monto: match.entities.amount, titulo: title } as Record<string, unknown>,
+        data: { categoria: category, monto: match.entities.amount, titulo: title, cuenta_hint: account ?? null } as Record<string, unknown>,
         source: 'nova-core',
       }
     }

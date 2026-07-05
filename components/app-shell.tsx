@@ -48,6 +48,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const pageType = getPageType(pathname)
 
+  // Scroll to top on every navigation (fixes mobile scroll jump)
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
   // Apply saved theme on mount
   useEffect(() => {
     const stored = localStorage.getItem('nova-finanzas:theme')
@@ -88,8 +93,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <ThemeCustomizationProvider>
       <div
-        className="relative min-h-screen overflow-x-hidden bg-gray-50 dark:bg-gray-950"
-        style={{ paddingTop: 'var(--sat)', minHeight: 'calc(100vh - var(--sat) - var(--sab))' }}
+        className="relative overflow-x-hidden bg-gray-50 dark:bg-gray-950"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)', minHeight: '100dvh' }}
       >
         <AnimatePresence mode="wait">
           {!showFullSummary ? (

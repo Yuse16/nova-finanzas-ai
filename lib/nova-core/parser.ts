@@ -184,14 +184,26 @@ export function parse(text: string): MatchResult {
 
   // Detect expense
   if (matchPatterns(lower, GASTO_PATTERNS) || (amount && category && lower.includes('gasto'))) {
+    // Extract account from the full text
+    const accountType = findAccount(text)
+    // Cleaner title: remove amount, account hints, "con", "de", "por" prefixes
     const title = (() => {
-      const t = text.replace(/registra|agrega|añade|nuev[oa]/gi, '').replace(/gasto|compra|pago/gi, '').trim()
-      return t.length > 2 ? t.charAt(0).toUpperCase() + t.slice(1) : undefined
+      let t = text
+        .replace(/registra|agrega|añade|nuev[oa]/gi, '')
+        .replace(/gasto|compra|pago/gi, '')
+        .replace(/\b\d+\s*(?:pesos|dolares|dólares|\$)?\b/gi, '')
+        .replace(/con\s+\w+/gi, '')
+        .replace(/\b(de|por|un)\b/gi, '')
+        .replace(/\b(débito|debito|credito|crédito|efectivo|ahorro|inversion|inversión)\b/gi, '')
+        .trim()
+      // Remove leading/trailing connectors
+      t = t.replace(/^(de|por|un|con)\s+/i, '').replace(/\s+(de|por|un|con)$/i, '').trim()
+      return t.length > 1 ? t.charAt(0).toUpperCase() + t.slice(1) : undefined
     })()
     return {
       matched: true,
       intent: 'addExpense',
-      entities: { amount: amount ?? undefined, category: category ?? undefined, title: title ?? (category ? `Gasto en ${category}` : undefined) },
+      entities: { amount: amount ?? undefined, category: category ?? undefined, title: title ?? (category ? `Gasto en ${category}` : undefined), account: accountType ?? undefined },
       confidence: amount ? 0.9 : 0.6,
     }
   }

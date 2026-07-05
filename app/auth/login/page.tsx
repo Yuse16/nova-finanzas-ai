@@ -31,6 +31,7 @@ export default function LoginPage() {
   async function handleGoogleSignIn() {
     setError(null)
     setGoogleLoading(true)
+    console.log('[AUTH] OAuth iniciado — redirigiendo a Google...')
     await signInWithGoogle()
   }
 

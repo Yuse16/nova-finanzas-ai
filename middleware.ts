@@ -17,6 +17,8 @@ export async function middleware(request: NextRequest) {
 
   const { supabaseResponse, user } = await updateSession(request)
 
+  console.log(`[MIDDLEWARE] Ruta: ${pathname}, User: ${user ? user.email : 'NO AUTENTICADO'}`)
+
   if (!user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'

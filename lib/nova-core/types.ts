@@ -22,6 +22,7 @@ export type ParsedEntities = {
   amount?: number
   category?: string
   title?: string
+  account?: string
   accountFrom?: string
   accountTo?: string
   accountName?: string

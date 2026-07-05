@@ -61,7 +61,7 @@ ${accountsContext}
 ## CATEGORÍAS DISPONIBLES
 Usa EXACTAMENTE estas categorías para clasificar gastos e ingresos. No uses categorías que no estén en esta lista.
 
-1. **Comida** — hamburguesa, tacos, restaurante, cocina, lonche, antojo, tortillas, pan, mercado de comida
+1. **Comida y bebida** — papas, pizza, tacos, hamburguesa, hot dog, tortas, antojito, pan, tortillas, huevo, arroz, frijoles, sopa, ensalada, fruta, verdura, carne, pollo, pescado, helado, pastel, postre, galletas, dulces, botana, restaurante, cocina, lonche, comida corrida, desayuno, cena, mercado de comida, frutería, verdulería, carnicería, pollería, pescadería, panadería, nevería, cocacola, coca, refresco, agua, cerveza, cafe, café
 2. **Café** — Starbucks, café de olla, americano, capuccino (solo si es bebida exclusivamente)
 3. **Transporte** — gasolina, uber, taxi, camión, autopista, estacionamiento, llanta, pasaje
 4. **Servicios** — internet, luz, agua, gas, teléfono, renta, predial, seguro, mantenimiento
@@ -82,7 +82,7 @@ Responde con un mensaje conversacional breve y natural, y al final del mensaje i
   "monto": número sin signo, 0 si no se menciona,
   "tipo": "gasto" | "ingreso" | "prestamo" | "me_prestaron",
   "categoria": "una de las 10 categorías exactas de la lista de arriba",
-  "cuenta_hint": "texto que mencionó el usuario sobre la cuenta, exactamente como lo dijo, o null si no mencionó ninguna",
+  "cuenta_hint": "texto que mencionó el usuario sobre la cuenta exactamente como lo dijo — ej: 'débito', 'tarjeta débito', 'crédito', 'efectivo', 'ahorro', 'BBVA', 'Nu' — o null si no mencionó ninguna. NUNCA cambies débito por efectivo",
   "mensaje": "mensaje conversacional corto para el usuario confirmando la acción detectada"
 }
 \`\`\`
@@ -92,8 +92,8 @@ REGLAS DE EXTRACCIÓN:
 - **monto**: extrae el número. Si dice "150 pesos", monto es 150. Si no hay monto, devuelve 0.
 - **tipo**: "gasto" para compras/gastos, "ingreso" para dinero que recibe, "prestamo" para dinero que prestó a alguien, "me_prestaron" para dinero que le prestaron.
 - **categoria**: usa las 10 categorías exactas de arriba. Si no estás seguro, usa "General".
-- **cuenta_hint**: si el usuario dice "débito", "crédito", "efectivo", "ahorro", o el nombre de un banco/cuenta (BBVA, Scotiabank, etc.), ponlo exactamente como lo dijo. Si no menciona ninguna cuenta, null.
-- **mensaje**: respuesta breve y amigable confirmando lo que detectaste.
+- **cuenta_hint**: IMPORTANTE: respeta SIEMPRE la cuenta que mencionó el usuario. Si dice "débito", "tarjeta débito", "tarjeta de débito", "debito", "tdc", pon EXACTAMENTE "débito". Si dice "crédito", "tarjeta crédito", "tarjeta de crédito", "credito", "tc", pon "crédito". Si dice "efectivo", "cash", pon "efectivo". Si dice "ahorro", pon "ahorro". Si dice el nombre de un banco (BBVA, Nu, Bancomer, Scotiabán, Bancoppel, etc.) o el nombre de una cuenta, ponlo exactamente como lo dijo. Si no menciona ninguna cuenta, null. NUNCA cambies "débito" por "efectivo".
+- **mensaje**: respuesta breve y amigable confirmando lo que detectaste. NUNCA adivines el nombre de la cuenta en el mensaje — la selección de cuenta la hace la aplicación. Solo confirma el concepto, monto y categoría.
 
 Si NO detectas una acción clara, responde SOLO con texto conversacional, sin bloque JSON.`
   }

@@ -1,5 +1,5 @@
 export const CATEGORIES: Record<string, string[]> = {
-  'comida': ['comida', 'compras', 'supermercado', 'mercado', 'despensa', 'alimentos', 'comer', 'restaurante', 'cenar', 'almorzar', 'desayunar', 'café', 'cafe', 'bebida', 'uber eats', 'rapp i', 'didi food', 'pedidos ya'],
+  'comida': ['comida', 'compras', 'supermercado', 'mercado', 'despensa', 'alimentos', 'comer', 'restaurante', 'cenar', 'almorzar', 'desayunar', 'café', 'cafe', 'bebida', 'uber eats', 'rapp i', 'didi food', 'pedidos ya', 'papas', 'pizza', 'tacos', 'hamburguesa', 'hot dog', 'refresco', 'agua', 'desayuno', 'cena', 'comida corrida', 'tortas', 'torta', 'antojito', 'coca', 'cocacola', 'cerveza', 'helado', 'fruta', 'verduras', 'carne', 'pollo', 'pescado', 'mariscos', 'pan', 'tortillas', 'huevo', 'arroz', 'frijoles', 'sopa', 'ensalada', 'sandwich', 'galletas', 'dulces', 'botana', 'pastel', 'postre'],
   'transporte': ['transporte', 'uber', 'taxi', 'didi', 'cabify', 'camión', 'camion', 'autobús', 'autobus', 'metro', 'combustible', 'gasolina', 'gas', 'estacionamiento', 'pasaje', 'boleto'],
   'entretenimiento': ['entretenimiento', 'cine', 'netflix', 'spotify', 'disney', 'hbo', 'prime', 'video', 'juego', 'suscripción', 'suscripcion', 'música', 'musica', 'concierto'],
   'servicios': ['servicio', 'luz', 'agua', 'gas', 'internet', 'teléfono', 'telefono', 'celular', 'predial', 'renta', 'suscripción'],
