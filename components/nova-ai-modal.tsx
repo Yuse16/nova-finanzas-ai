@@ -55,7 +55,7 @@ function VoiceMenuItem({ icon, label, onClick }: { icon: string; label: string; 
 export function NovaAIModal() {
   const { modal, close } = useUI()
   const isOpen = modal.kind === 'nova-ai'
-  const { data, addMovement, addGoal } = useStore()
+  const { data, addMovement, addGoal, addAssistantMessage } = useStore()
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -212,6 +212,12 @@ export function NovaAIModal() {
         multiData: response.multiData,
       }
       setMessages(prev => [...prev, assistantMsg])
+
+      addAssistantMessage({
+        question: text,
+        answer: response.text,
+        breakdown: response.data?.breakdown,
+      })
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Error al procesar tu mensaje'
       setMessages(prev => [...prev, { id: nextId(), role: 'assistant', content: `⚠️ ${errorMsg}` }])
