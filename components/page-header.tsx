@@ -46,8 +46,8 @@ export function PageHeader({ page }: { page: PageType }) {
     <section
         className="relative w-screen overflow-hidden shrink-0 left-1/2 -translate-x-1/2"
         style={{
-          height: 'calc(340px + env(safe-area-inset-top, 0px))',
-          marginTop: 'calc(-1.5rem - env(safe-area-inset-top, 0px) - 60px)',
+          height: 'calc(280px + env(safe-area-inset-top, 0px))',
+          marginTop: 'calc(-1.5rem - env(safe-area-inset-top, 0px))',
         }}
       >
       <div className="absolute inset-0">
