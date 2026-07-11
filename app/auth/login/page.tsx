@@ -36,12 +36,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-        className="relative flex h-dvh flex-col bg-gray-50 dark:bg-gray-950"
-        style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
+    <div className="relative flex h-dvh flex-col bg-gray-50 dark:bg-gray-950">
       <MountainBackground />
-      <div className="relative z-10 flex flex-1 flex-col justify-center px-5">
+      <div
+          className="relative z-10 flex flex-1 flex-col justify-center px-5"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
         <div className="mx-auto w-full max-w-sm rounded-2xl bg-white/90 p-6 shadow-lg backdrop-blur dark:bg-gray-900/90">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">

@@ -77,7 +77,7 @@ export default function RootLayout({
   return (
     // Aplicar las clases de fuente generadas directamente al html
     <html lang="es" className={fontClasses}>
-      <body className="font-system antialiased">
+      <body className="font-system antialiased bg-gray-50 dark:bg-gray-950">
         <AuthProvider>
           <UIProvider>
             <AppShell>
