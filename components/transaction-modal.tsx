@@ -13,7 +13,7 @@ import {
   methodToAccountType,
   movementTypeLabels,
 } from '@/lib/catalog'
-import { todayISO } from '@/lib/format'
+import { fmt, todayISO } from '@/lib/format'
 import type { Account, Method, Movement, MovementType } from '@/lib/types'
 import { GlassSheet } from './ui/glass-sheet'
 import {
