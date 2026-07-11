@@ -70,14 +70,6 @@ export function NovaAIModal() {
     dataIndex?: number
   } | null>(null)
   const [showAccountPicker, setShowAccountPicker] = useState(false)
-  const [editState, setEditState] = useState<{
-    msgId: string
-    dataIndex?: number
-    concepto: string
-    monto: string
-    categoria: string
-  } | null>(null)
-  const [confirmedItems, setConfirmedItems] = useState<Set<string>>(new Set())
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isHoldingRef = useRef(false)
   const didHoldRef = useRef(false)
@@ -314,20 +306,7 @@ export function NovaAIModal() {
       })
     }
 
-    if (dataIndex !== undefined && msg.multiData) {
-      const key = `${msg.id}-${dataIndex}`
-      const updatedSet = new Set(confirmedItems)
-      updatedSet.add(key)
-      setConfirmedItems(updatedSet)
-      const allConfirmed = msg.multiData.every((_, i) =>
-        updatedSet.has(`${msg.id}-${i}`)
-      )
-      if (allConfirmed) {
-        setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, confirmed: true } : m))
-      }
-    } else {
-      setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, confirmed: true } : m))
-    }
+    setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, confirmed: true } : m))
 
     if (msg.intent === 'createGoal' && targetData) {
       addGoal({
@@ -364,15 +343,6 @@ export function NovaAIModal() {
     doSaveAction(msg, resolvedId, dataIndex)
   }
 
-  function cancelItem(msgId: string, dataIndex?: number) {
-    if (dataIndex !== undefined) {
-      const key = `${msgId}-${dataIndex}`
-      setConfirmedItems(prev => new Set(prev).add(key))
-    } else {
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, confirmed: true } : m))
-    }
-  }
-
   function handleAccountSelect(accountId: string) {
     if (!pendingAction) return
     doSaveAction(pendingAction.msg, accountId, pendingAction.dataIndex)
@@ -383,14 +353,7 @@ export function NovaAIModal() {
     const label = isExpense ? 'Gasto detectado' : 'Ingreso detectado'
     const btnColor = isExpense ? 'bg-red-500' : 'bg-green-500'
 
-    const itemKey = dataIndex !== undefined ? `${msg.id}-${dataIndex}` : msg.id
-    const isItemConfirmed = dataIndex !== undefined
-      ? confirmedItems.has(itemKey)
-      : msg.confirmed
-
-    if (isItemConfirmed) return null
-
-    const isEditing = editState?.msgId === msg.id && editState?.dataIndex === (dataIndex ?? undefined)
+    if (msg.confirmed) return null
 
     const isPending = pendingAction?.msg.id === msg.id &&
       pendingAction?.dataIndex === (dataIndex ?? undefined)
@@ -427,77 +390,15 @@ export function NovaAIModal() {
     const borderClass = isExpense ? 'border-red-100 dark:border-red-900/30' : 'border-green-100 dark:border-green-900/30'
     const textAccentClass = isExpense ? 'text-red-500' : 'text-green-500'
 
-    if (isEditing) {
-      return (
-        <div key={itemKey}>
-          <div className={`mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border ${borderClass} p-3`}>
-            <p className={`text-xs font-semibold ${textAccentClass} uppercase tracking-wider`}>{label} — editando</p>
-            <div className="mt-2 space-y-2">
-              <input
-                type="text"
-                value={editState?.concepto ?? ''}
-                onChange={(e) => setEditState(prev => prev ? { ...prev, concepto: e.target.value } : null)}
-                className="w-full rounded-lg bg-white/80 dark:bg-white/[0.12] border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50"
-                placeholder="Concepto"
-              />
-              <input
-                type="number"
-                value={editState?.monto ?? '0'}
-                onChange={(e) => setEditState(prev => prev ? { ...prev, monto: e.target.value } : null)}
-                className="w-full rounded-lg bg-white/80 dark:bg-white/[0.12] border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50"
-                placeholder="Monto"
-              />
-              <select
-                value={editState?.categoria ?? ''}
-                onChange={(e) => setEditState(prev => prev ? { ...prev, categoria: e.target.value } : null)}
-                className="w-full rounded-lg bg-white/80 dark:bg-white/[0.12] border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50"
-              >
-                {['Comida y bebida', 'Café', 'Transporte', 'Servicios', 'Compras', 'Entretenimiento', 'Salud', 'Educación', 'Ingreso', 'General', 'Hogar', 'Ropa', 'Tecnología', 'Casa', 'Deudas'].map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const target = dataIndex !== undefined && msg.multiData
-                    ? msg.multiData[dataIndex]
-                    : msg.data
-                  if (!target) return
-                  target.concepto = editState?.concepto || target.concepto
-                  target.monto = parseFloat(editState?.monto || '0') || target.monto
-                  target.categoria = editState?.categoria || target.categoria
-                  setEditState(null)
-                }}
-                className={`flex-1 rounded-lg ${btnColor} py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform`}
-              >
-                Aplicar
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditState(null)}
-                className="flex-1 rounded-lg bg-gray-300 dark:bg-gray-600 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 active:scale-[0.98] transition-transform"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
     return (
-      <div key={itemKey}>
+      <div>
         <div className={`mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border ${borderClass} p-3`}>
-          <div className="flex items-center justify-between">
-            <p className={`text-xs font-semibold ${textAccentClass} uppercase tracking-wider`}>
-              {label}
-              {dataIndex !== undefined && msg.multiData && msg.multiData.length > 1
-                ? ` (${dataIndex! + 1}/${msg.multiData.length})`
-                : ''}
-            </p>
-          </div>
+          <p className={`text-xs font-semibold ${textAccentClass} uppercase tracking-wider`}>
+            {label}
+            {dataIndex !== undefined && msg.multiData && msg.multiData.length > 1
+              ? ` (${dataIndex! + 1}/${msg.multiData.length})`
+              : ''}
+          </p>
           <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">
             Concepto: <span className="font-medium">{data.concepto || '—'}</span>
           </p>
@@ -507,37 +408,13 @@ export function NovaAIModal() {
           <p className="text-sm text-gray-700 dark:text-gray-200">
             Monto: <span className="font-medium">${fmt(data.monto || 0)}</span>
           </p>
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              onClick={() => confirmIntent(msg, dataIndex)}
-              className={`flex-1 rounded-lg ${btnColor} py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform`}
-            >
-              Guardar
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEditState({
-                  msgId: msg.id,
-                  dataIndex,
-                  concepto: data.concepto || '',
-                  monto: String(data.monto || 0),
-                  categoria: data.categoria || 'General',
-                })
-              }}
-              className="flex-1 rounded-lg bg-blue-500 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform"
-            >
-              Editar
-            </button>
-            <button
-              type="button"
-              onClick={() => cancelItem(msg.id, dataIndex)}
-              className="flex-1 rounded-lg bg-gray-300 dark:bg-gray-600 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 active:scale-[0.98] transition-transform"
-            >
-              Cancelar
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => confirmIntent(msg, dataIndex)}
+            className={`mt-2 w-full rounded-lg ${btnColor} py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform`}
+          >
+            Guardar
+          </button>
         </div>
         {accountPicker}
       </div>
@@ -565,7 +442,11 @@ export function NovaAIModal() {
     if (msg.multiData && msg.multiData.length > 0) {
       return (
         <div>
-          {msg.multiData.map((d, i) => renderDataCard(d, msg, i))}
+          {msg.multiData.map((d, i) => (
+            <div key={`${msg.id}-${i}`}>
+              {renderDataCard(d, msg, i)}
+            </div>
+          ))}
         </div>
       )
     }
