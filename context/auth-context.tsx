@@ -9,6 +9,7 @@ type AuthContextValue = {
   user: User | null
   session: Session | null
   loading: boolean
+  isStandalone: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (email: string, password: string) => Promise<{ error: string | null; user: User | null }>
   signInWithGoogle: () => Promise<void>
@@ -23,6 +24,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
+  const detectStandalone = () =>
+    typeof window !== 'undefined' &&
+    (window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true)
+
+  const [isStandalone, setIsStandalone] = useState(false)
+
+  useEffect(() => {
+    setIsStandalone(detectStandalone())
+  }, [])
+
   useEffect(() => {
     async function init() {
       const { data: { session } } = await supabase.auth.getSession()
@@ -36,6 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      const standalone = detectStandalone()
+      console.log(
+        `[AUTH] onAuthStateChange evento="${event}" standalone=${standalone}`,
+        session ? `usuario ${session.user.email}` : 'sin sesión',
+      )
       setSession(session)
       setUser(session?.user ?? null)
       useStore.getState().setUserData(session?.user?.id ?? null)
@@ -64,6 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
+    const standalone = detectStandalone()
+    console.log(
+      `[AUTH] signInWithGoogle — modo: ${standalone ? 'standalone (PWA)' : 'navegador'}`,
+      `redirigiendo a: ${window.location.origin}/auth/callback`,
+    )
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -77,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isStandalone, signIn, signUp, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   )

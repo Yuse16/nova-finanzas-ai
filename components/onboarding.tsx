@@ -350,7 +350,7 @@ export function Onboarding() {
                 <Sparkles className="size-8 text-[oklch(0.82_0.16_90)]" />
               </div>
               <h1 className="text-3xl font-semibold tracking-tight text-balance text-[var(--onboarding-text)]">
-                Bienvenido a Nova Finanzas AI
+                Bienvenido a MPUME Finanzas AI
               </h1>
               <p className="mt-3 text-base leading-relaxed text-[var(--onboarding-text-secondary)] text-pretty">
                 Tu centro de control financiero personal. Registra gastos por

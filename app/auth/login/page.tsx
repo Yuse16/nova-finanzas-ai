@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const { signIn, signInWithGoogle } = useAuth()
+  const { signIn, signInWithGoogle, isStandalone } = useAuth()
   const router = useRouter()
 
   async function handleSubmit(e: FormEvent) {
@@ -42,11 +42,14 @@ export default function LoginPage() {
         <div className="mx-auto w-full max-w-sm rounded-2xl bg-white/90 p-6 shadow-lg backdrop-blur dark:bg-gray-900/90">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Nova Finanzas
+              MPUME Finanzas
             </h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Inicia sesión para continuar
             </p>
+            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">
+              {isStandalone ? '📱 PWA' : '🌐 Navegador'}
+            </span>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

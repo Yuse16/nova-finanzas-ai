@@ -25,28 +25,28 @@ const roboto_mono = Roboto_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Nova Finanzas',
+  title: 'MPUME Finanzas',
   description:
     'Tu centro de control financiero personal con inteligencia artificial. Registra gastos por voz, controla tus cuentas y alcanza tus metas.',
   generator: 'v0.app',
-  manifest: '/manifest.json?v=3',
+  manifest: '/manifest.json?v=4',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Nova Finanzas',
+    title: 'MPUME Finanzas',
   },
   icons: [
-    { rel: 'icon', url: '/icon.webp?v=3', type: 'image/webp' },
-    { rel: 'apple-touch-icon', url: '/icon.webp?v=3', type: 'image/webp' },
-    { rel: 'shortcut icon', url: '/icon.webp?v=3', type: 'image/webp' },
+    { rel: 'icon', url: '/icon-192.webp?v=1', type: 'image/webp', sizes: '192x192' },
+    { rel: 'apple-touch-icon', url: '/icon-512.webp?v=1', type: 'image/webp', sizes: '512x512' },
+    { rel: 'shortcut icon', url: '/icon-192.webp?v=1', type: 'image/webp' },
   ],
   other: {
     'mobile-web-app-capable': 'yes',
   },
   openGraph: {
-    title: 'Nova Finanzas',
+    title: 'MPUME Finanzas',
     description: 'Tu centro de control financiero personal con inteligencia artificial.',
-    images: [{ url: '/icon.webp?v=3', width: 512, height: 512 }],
+    images: [{ url: '/icon-512.webp?v=1', width: 512, height: 512 }],
   },
 }
 
