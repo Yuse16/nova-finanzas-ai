@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, ChevronDown, Trash2 } from 'lucide-react'
+import { Check, ChevronDown, Settings, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
@@ -49,6 +49,7 @@ export function TransactionModal() {
   const [date, setDate] = useState(todayISO())
   const [person, setPerson] = useState('')
   const [showAccountPicker, setShowAccountPicker] = useState(false)
+  const [viewing, setViewing] = useState(true)
 
   // Initialize the form whenever it opens
   useEffect(() => {
@@ -62,7 +63,9 @@ export function TransactionModal() {
       setAccountId(editing.accountId)
       setDate(editing.date.slice(0, 10))
       setPerson(editing.person ?? '')
+      setViewing(true)
     } else {
+      setViewing(false)
       const t = (parsed?.type as MovementType) ?? preset ?? 'gasto'
       setType(t)
       setTitle(parsed?.title ?? '')
@@ -157,13 +160,64 @@ export function TransactionModal() {
 
   const showPerson = type === 'prestamo' || type === 'deuda'
 
+  function ReadOnlySummary() {
+    if (!editing) return null
+    const m = editing
+    const Icon = getIcon(m.icon)
+    const acc = data.accounts.find((a) => a.id === m.accountId)
+    const isPositive = m.type === 'ingreso' || m.type === 'deuda'
+
+    return (
+      <div className="flex flex-col items-center gap-4 pt-4">
+        <span
+          className="grid size-14 place-items-center rounded-2xl"
+          style={{ background: m.color }}
+        >
+          <Icon className="size-7 text-white" />
+        </span>
+        <div className="text-center">
+          <p className="text-lg font-bold text-gray-900 dark:text-white">{m.title}</p>
+          <p className={`text-3xl font-bold tabular-nums ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
+            {isPositive ? '+' : '-'}${fmt(m.amount)}
+          </p>
+        </div>
+        <div className="w-full space-y-2 rounded-2xl bg-white/40 px-4 py-3 dark:bg-white/[0.06]">
+          <Row label="Categoría" value={m.category} />
+          <Row label="Tipo" value={movementTypeLabels[m.type]} />
+          {acc && <Row label="Cuenta" value={`${acc.name}${acc.bank ? ` · ${acc.bank}` : ''}`} />}
+          {m.method && <Row label="Método" value={m.method} />}
+          {m.person && <Row label="Persona" value={m.person} />}
+          <Row label="Fecha" value={new Date(m.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })} />
+          {m.note && <Row label="Nota" value={m.note} />}
+        </div>
+        <div className="flex w-full gap-2 pt-2">
+          <GlassButton onClick={() => setViewing(false)}>
+            <Settings className="size-4" /> Editar
+          </GlassButton>
+          <GlassButton variant="danger" onClick={handleDelete}>
+            <Trash2 className="size-4" /> Eliminar
+          </GlassButton>
+        </div>
+      </div>
+    )
+  }
+
+  function Row({ label, value }: { label: string; value: string }) {
+    return (
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-500 dark:text-gray-400">{label}</span>
+        <span className="font-medium text-gray-900 dark:text-white">{value}</span>
+      </div>
+    )
+  }
+
   return (
     <>
       <GlassSheet
         open={isOpen}
         onClose={close}
-        title={editing ? 'Editar movimiento' : 'Nuevo movimiento'}
-        footer={
+        title={editing && viewing ? 'Movimiento' : editing ? 'Editar movimiento' : 'Nuevo movimiento'}
+        footer={viewing ? null : (
           <div className="flex flex-col gap-3 pb-2">
             <GlassButton onClick={save} disabled={!valid}>
               {editing ? 'Guardar cambios' : 'Agregar movimiento'}
@@ -174,8 +228,9 @@ export function TransactionModal() {
               </GlassButton>
             )}
           </div>
-        }
+        )}
       >
+        {viewing && editing ? <ReadOnlySummary /> : (
         <div className="flex flex-col gap-5">
           <Field label="Tipo">
             <ChipSelect
@@ -287,6 +342,7 @@ export function TransactionModal() {
             />
           </Field>
         </div>
+        )}
       </GlassSheet>
 
       <AnimatePresence>
