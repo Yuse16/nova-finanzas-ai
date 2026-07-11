@@ -46,7 +46,7 @@ export function GlassSheet({
               onClick={onClose}
               className="absolute inset-0 cursor-pointer"
             >
-              <div className="absolute inset-0 bg-black/[0.04] backdrop-blur-[2px] dark:bg-black/30 dark:backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-black/20 backdrop-blur-md dark:bg-black/50 dark:backdrop-blur-lg" />
             </button>
           </motion.div>
 
