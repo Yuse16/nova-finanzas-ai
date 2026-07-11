@@ -13,13 +13,17 @@ import type { Account, Goal, Movement, Reminder, MovementType } from './types'
 export type MovementFilters = {
   accounts: string[]     // account IDs to include (empty = all)
   categories: string[]   // categories to include (empty = all)
-  datePreset: 'all' | 'today' | 'week' | 'month' | 'year'
+  datePreset: 'all' | 'today' | 'week' | 'month' | 'year' | 'custom'
+  dateFrom: string       // ISO date string for custom range
+  dateTo: string         // ISO date string for custom range
 }
 
 const defaultFilters: MovementFilters = {
   accounts: [],
   categories: [],
   datePreset: 'all',
+  dateFrom: '',
+  dateTo: '',
 }
 
 export type ModalState =

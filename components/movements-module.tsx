@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Search, SlidersHorizontal } from 'lucide-react'
 import { useStore } from '@/lib/store'
-import { useUI } from '@/lib/ui-context'
+import { useUI, type MovementFilters } from '@/lib/ui-context'
 import { getIcon } from '@/lib/icons'
 import { fmt, dateGroup } from '@/lib/format'
 import type { Movement, MovementType } from '@/lib/types'
@@ -16,11 +16,12 @@ const TYPE_FILTERS: { label: string; value: 'todos' | MovementType }[] = [
   { label: 'Deudas', value: 'deuda' },
 ]
 
-function matchesDatePreset(dateStr: string, preset: string): boolean {
-  if (preset === 'all') return true
-  const d = new Date(dateStr)
+function matchesDateFilter(m: Movement, filters: MovementFilters): boolean {
+  if (filters.datePreset === 'all') return true
+  if (!m.date) return false
+  const d = new Date(m.date)
   const now = new Date()
-  switch (preset) {
+  switch (filters.datePreset) {
     case 'today':
       return d.toDateString() === now.toDateString()
     case 'week': {
@@ -33,6 +34,10 @@ function matchesDatePreset(dateStr: string, preset: string): boolean {
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
     case 'year':
       return d.getFullYear() === now.getFullYear()
+    case 'custom':
+      if (filters.dateFrom && new Date(m.date) < new Date(filters.dateFrom)) return false
+      if (filters.dateTo && new Date(m.date) > new Date(filters.dateTo + 'T23:59:59')) return false
+      return true
     default:
       return true
   }
@@ -65,9 +70,7 @@ export function MovementsModule() {
     }
 
     // Date preset filter
-    if (filters.datePreset !== 'all') {
-      list = list.filter((m) => m.date && matchesDatePreset(m.date, filters.datePreset))
-    }
+    list = list.filter((m) => matchesDateFilter(m, filters))
 
     const sorted = [...list].sort((a, b) => {
       const dateA = a.date || ''
@@ -108,7 +111,7 @@ export function MovementsModule() {
           className="relative grid size-9 place-items-center rounded-xl bg-white shadow-sm dark:bg-gray-900"
         >
           <SlidersHorizontal className="size-4 text-gray-500 dark:text-gray-400" />
-          {(filters.accounts.length > 0 || filters.categories.length > 0 || filters.datePreset !== 'all') && (
+          {(filters.accounts.length > 0 || filters.categories.length > 0 || filters.datePreset !== 'all' || (filters.datePreset === 'custom' && (filters.dateFrom || filters.dateTo))) && (
             <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-blue-600" />
           )}
         </button>

@@ -13,6 +13,7 @@ const DATE_PRESETS = [
   { value: 'week' as const, label: 'Esta semana' },
   { value: 'month' as const, label: 'Este mes' },
   { value: 'year' as const, label: 'Este año' },
+  { value: 'custom' as const, label: 'Personalizado' },
 ]
 
 export function FiltersModal() {
@@ -23,7 +24,8 @@ export function FiltersModal() {
   const activeCount =
     (filters.accounts.length > 0 ? 1 : 0) +
     (filters.categories.length > 0 ? 1 : 0) +
-    (filters.datePreset !== 'all' ? 1 : 0)
+    (filters.datePreset !== 'all' ? 1 : 0) +
+    (filters.datePreset === 'custom' && (filters.dateFrom || filters.dateTo) ? 1 : 0)
 
   const usedCategories = useMemo(() => {
     const set = new Set(data.movements.map((m) => m.category))
@@ -49,7 +51,15 @@ export function FiltersModal() {
   }
 
   function setDatePreset(preset: typeof filters.datePreset) {
-    setFilters({ ...filters, datePreset: preset })
+    setFilters({ ...filters, datePreset: preset, dateFrom: '', dateTo: '' })
+  }
+
+  function setDateFrom(val: string) {
+    setFilters({ ...filters, datePreset: 'custom', dateFrom: val })
+  }
+
+  function setDateTo(val: string) {
+    setFilters({ ...filters, datePreset: 'custom', dateTo: val })
   }
 
   function handleReset() {
@@ -80,6 +90,29 @@ export function FiltersModal() {
               </button>
             ))}
           </div>
+
+          {filters.datePreset === 'custom' && (
+            <div className="mt-3 flex gap-3">
+              <div className="flex-1">
+                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Desde</label>
+                <input
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Hasta</label>
+                <input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Accounts */}
