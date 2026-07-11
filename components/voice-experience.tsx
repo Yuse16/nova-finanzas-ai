@@ -208,9 +208,9 @@ export function VoiceExperience({
                   exit={{ opacity: 0 }}
                   className="flex flex-col items-center gap-5 pt-2"
                 >
-                  <p className="text-center text-red-500 font-semibold">Error en el reconocimiento de voz</p>
+                  <p className="text-center text-red-500 font-semibold">Permiso del micrófono</p>
                   <p className="text-sm text-muted-foreground text-center">
-                    Asegúrate de haber otorgado el permiso al micrófono y vuelve a intentar.
+                    Necesitamos acceso al micrófono para escucharte. Presiona y mantén el botón, o concede el permiso en los ajustes del navegador.
                   </p>
                 </motion.div>
               )}

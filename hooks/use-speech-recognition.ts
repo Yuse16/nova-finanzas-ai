@@ -50,7 +50,7 @@ export function useSpeechRecognition() {
     recognitionRef.current?.stop()
   }, [])
 
-  const start = useCallback(() => {
+  const start = useCallback(async () => {
     const Ctor = getRecognitionCtor()
     if (!Ctor) {
       setStatus('unsupported')
@@ -59,6 +59,16 @@ export function useSpeechRecognition() {
     setError(null)
     setTranscript('')
     finalRef.current = ''
+
+    // Pre-warm microphone permission so iOS doesn't re-prompt on every launch
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream.getTracks().forEach((t) => t.stop())
+    } catch {
+      setStatus('error')
+      setError('microphone-denied')
+      return
+    }
 
     const recognition = new Ctor()
     recognition.lang = 'es-MX'
