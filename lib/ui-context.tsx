@@ -10,6 +10,18 @@ import {
 } from 'react'
 import type { Account, Goal, Movement, Reminder, MovementType } from './types'
 
+export type MovementFilters = {
+  accounts: string[]     // account IDs to include (empty = all)
+  categories: string[]   // categories to include (empty = all)
+  datePreset: 'all' | 'today' | 'week' | 'month' | 'year'
+}
+
+const defaultFilters: MovementFilters = {
+  accounts: [],
+  categories: [],
+  datePreset: 'all',
+}
+
 export type ModalState =
   | { kind: 'none' }
   | { kind: 'voice' }
@@ -47,6 +59,9 @@ type UIValue = {
   showFullSummary: boolean
   openFullSummary: () => void
   closeFullSummary: () => void
+  filters: MovementFilters
+  setFilters: (f: MovementFilters) => void
+  resetFilters: () => void
 }
 
 const UIContext = createContext<UIValue | null>(null)
@@ -71,6 +86,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [theme, setThemeState] = useState<'light' | 'dark'>(getInitialTheme)
   const [showFullSummary, setShowFullSummary] = useState(false)
+  const [filters, setFilters] = useState<MovementFilters>(defaultFilters)
+  const resetFilters = useCallback(() => setFilters(defaultFilters), [])
 
   // Apply data-theme on mount and on change
   const setTheme = useCallback((t: 'light' | 'dark') => {
@@ -87,8 +104,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const closeFullSummary = useCallback(() => setShowFullSummary(false), [])
 
   const value = useMemo(
-    () => ({ modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice, theme, setTheme, showFullSummary, openFullSummary, closeFullSummary }),
-    [modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice, theme, setTheme, showFullSummary, openFullSummary, closeFullSummary],
+    () => ({ modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice, theme, setTheme, showFullSummary, openFullSummary, closeFullSummary, filters, setFilters, resetFilters }),
+    [modal, open, close, tab, setTab, voiceOpen, openVoice, closeVoice, theme, setTheme, showFullSummary, openFullSummary, closeFullSummary, filters, setFilters, resetFilters],
   )
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>
 }
