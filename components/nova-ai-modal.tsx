@@ -92,9 +92,19 @@ export function NovaAIModal() {
   }, [])
 
   useEffect(() => {
-    if (isOpen) {
-      setMessages([])
-      setShowChips(true)
+    if (isOpen && modal.kind === 'nova-ai') {
+      if (modal.history && modal.history.length > 0) {
+        const msgs: ChatMessage[] = []
+        modal.history.forEach((h) => {
+          msgs.push({ id: nextId(), role: 'user', content: h.question })
+          msgs.push({ id: nextId(), role: 'assistant', content: h.answer })
+        })
+        setMessages(msgs)
+        setShowChips(false)
+      } else {
+        setMessages([])
+        setShowChips(true)
+      }
       msgId = 0
     }
   }, [isOpen])
