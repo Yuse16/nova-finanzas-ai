@@ -94,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <ThemeCustomizationProvider>
       <div
         className="relative overflow-x-hidden bg-gray-50 dark:bg-gray-950"
-        style={{ paddingTop: 'env(safe-area-inset-top, 0px)', minHeight: '100dvh' }}
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', minHeight: '100dvh' }}
       >
         <AnimatePresence mode="wait">
           {!showFullSummary ? (

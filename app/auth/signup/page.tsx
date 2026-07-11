@@ -52,7 +52,10 @@ export default function SignupPage() {
 
   if (confirmationSent) {
     return (
-      <div className="relative flex h-dvh flex-col bg-gray-50 dark:bg-gray-950">
+      <div
+          className="relative flex h-dvh flex-col bg-gray-50 dark:bg-gray-950"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
         <MountainBackground />
         <div className="relative z-10 flex flex-1 flex-col justify-center px-5">
           <div className="mx-auto w-full max-w-sm rounded-2xl bg-white/90 p-6 text-center shadow-lg backdrop-blur dark:bg-gray-900/90">
@@ -81,7 +84,10 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="relative flex h-dvh flex-col bg-gray-50 dark:bg-gray-950">
+    <div
+        className="relative flex h-dvh flex-col bg-gray-50 dark:bg-gray-950"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
       <MountainBackground />
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5">
         <div className="mx-auto w-full max-w-sm rounded-2xl bg-white/90 p-6 shadow-lg backdrop-blur dark:bg-gray-900/90">
