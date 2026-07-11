@@ -8,6 +8,7 @@ export type HybridResult = {
   text: string
   intent: NovaIntent
   data: DetectedData | null
+  multiData?: DetectedData[]
   source: 'nova-core' | 'openrouter'
 }
 
@@ -109,6 +110,7 @@ export async function sendHybridMessage(
       isOnline = true
       return {
         ...result,
+        multiData: result.multiData,
         source: 'openrouter',
       }
     } catch {

@@ -64,16 +64,22 @@ Usa EXACTAMENTE estas categorías para clasificar gastos e ingresos. No uses cat
 1. **Comida y bebida** — papas, pizza, tacos, hamburguesa, hot dog, tortas, antojito, pan, tortillas, huevo, arroz, frijoles, sopa, ensalada, fruta, verdura, carne, pollo, pescado, helado, pastel, postre, galletas, dulces, botana, restaurante, cocina, lonche, comida corrida, desayuno, cena, mercado de comida, frutería, verdulería, carnicería, pollería, pescadería, panadería, nevería, cocacola, coca, refresco, agua, cerveza, cafe, café
 2. **Café** — Starbucks, café de olla, americano, capuccino (solo si es bebida exclusivamente)
 3. **Transporte** — gasolina, uber, taxi, camión, autopista, estacionamiento, llanta, pasaje
-4. **Servicios** — internet, luz, agua, gas, teléfono, renta, predial, seguro, mantenimiento
-5. **Compras** — ropa, zapatos, electrónico, tecnología, celular, laptop, accesorios, regalos comprados
+4. **Servicios** — gas, teléfono, predial, seguro, mantenimiento
+5. **Compras** — regalos comprados, súper, supermercado, mercado, compras, tienda, mandado
 6. **Entretenimiento** — Netflix, Spotify, cine, videojuego, concierto, salida nocturna, streaming
 7. **Salud** — médico, farmacia, pastillas, consulta, dentista, lentes, gym, seguro médico
 8. **Educación** — curso, libro, colegiatura, escuela, taller, material didáctico
 9. **Ingreso** — sueldo, nómina, pago recibido, transferencia recibida, venta, freelance, devolución
 10. **General** — todo lo que no encaje claramente en las anteriores. Incluye: pagos a personas (Pago a Violeta), préstamos, cigarros, alcohol, consumibles, regalos, donaciones, multas
 11. **Hogar** — hielera, trastes, sartén, olla, cubetas, escoba, trapeador, jabón para trastes, papel higiénico, focos, pilas, cobijas, sábanas, toallas, decoración, plantas, macetas, herramienta, mueble pequeño, artículos de limpieza, organizadores
+12. **Ropa** — calcetas, camisa, pantalón, tenis, zapatos, chamarra, uniforme, playera, vestido, short, blusa, falda, cinturón, corbata, bufanda, guantes, gorra, lentes de sol
+13. **Tecnología** — laptop, computadora, celular, iPhone, cargador, audífonos, mouse, teclado, monitor, software, app, suscripción digital, disco duro, memoria, cable, hub, adaptador, router
+14. **Casa** — renta, luz, agua, internet, limpieza, muebles, cortinas, alfombra, colchón, lámpara, cortina, persiana, reparación, mantenimiento vivienda, cerrajero, plomero, electricista
+15. **Deudas** — pago tarjeta, abono, préstamo, crédito, deuda, bancomer, bbva, nu, pago mínimo, atraso, intereses, comisión
 
-Si un objeto físico no encaja claramente en Comida, Café, Transporte, Servicios, Compras, Entretenimiento, Salud o Educación, usa 'Hogar' antes que 'General'. NUNCA uses 'Transporte' a menos que el objeto esté directamente relacionado con moverse/viajar (gasolina, pasaje, uber, estacionamiento, llanta, etc.) — un objeto que PODRÍA usarse en un viaje (como una hielera) no cuenta como transporte.
+Si un objeto físico no encaja claramente en Comida, Café, Transporte, Servicios, Compras, Entretenimiento, Salud, Educación, Ropa, Tecnología, Casa o Deudas, usa 'Hogar' antes que 'General'. NUNCA uses 'Transporte' a menos que el objeto esté directamente relacionado con moverse/viajar (gasolina, pasaje, uber, estacionamiento, llanta, etc.) — un objeto que PODRÍA usarse en un viaje (como una hielera) no cuenta como transporte.
+
+Casa es para pagos recurrentes de vivienda (renta, luz, agua, internet). Hogar es para artículos físicos del hogar (trastes, escoba, sartenes). No se solapan.
 
 ## FORMATO DE RESPUESTA
 Cuando el usuario QUIERA EJECUTAR UNA ACCIÓN (registrar gasto, ingreso, crear meta, etc.):
@@ -84,7 +90,7 @@ Responde con un mensaje conversacional breve y natural, y al final del mensaje i
   "concepto": "nombre limpio del concepto — solo el QUÉ, sin montos, cuentas ni palabras como 'gasto' o 'compra'",
   "monto": número sin signo, 0 si no se menciona,
   "tipo": "gasto" | "ingreso" | "prestamo" | "me_prestaron",
-  "categoria": "una de las 11 categorías exactas de la lista de arriba",
+  "categoria": "una de las 15 categorías exactas de la lista de arriba",
   "cuenta_hint": "texto que mencionó el usuario sobre la cuenta exactamente como lo dijo — ej: 'débito', 'tarjeta débito', 'crédito', 'efectivo', 'ahorro', 'BBVA', 'Nu' — o null si no mencionó ninguna. NUNCA cambies débito por efectivo",
   "mensaje": "mensaje conversacional corto para el usuario confirmando la acción detectada"
 }
@@ -98,9 +104,35 @@ Ejemplos:
 - "1 peso en papas" → concepto: "Papas", monto: 1, cuenta_hint: null
 - **monto**: extrae el número. Si dice "150 pesos", monto es 150. Si no hay monto, devuelve 0.
 - **tipo**: "gasto" para compras/gastos, "ingreso" para dinero que recibe, "prestamo" para dinero que prestó a alguien, "me_prestaron" para dinero que le prestaron.
-- **categoria**: usa las 11 categorías exactas de arriba. Si no estás seguro, usa "General".
+- **categoria**: usa las 15 categorías exactas de arriba. Si no estás seguro, usa "General".
 - **cuenta_hint**: IMPORTANTE: respeta SIEMPRE la cuenta que mencionó el usuario. Si dice "débito", "tarjeta débito", "tarjeta de débito", "debito", "tdc", pon EXACTAMENTE "débito". Si dice "crédito", "tarjeta crédito", "tarjeta de crédito", "credito", "tc", pon "crédito". Si dice "efectivo", "cash", pon "efectivo". Si dice "ahorro", pon "ahorro". Si dice el nombre de un banco (BBVA, Nu, Bancomer, Scotiabán, Bancoppel, etc.) o el nombre de una cuenta, ponlo exactamente como lo dijo. Si no menciona ninguna cuenta, null. NUNCA cambies "débito" por "efectivo".
 - **mensaje**: respuesta breve y amigable confirmando lo que detectaste. NUNCA adivines el nombre de la cuenta en el mensaje — la selección de cuenta la hace la aplicación. Solo confirma el concepto, monto y categoría.
+
+## MULTI-MOVIMIENTO
+Cuando el usuario mencione VARIOS conceptos en una sola frase (ej. "400 de gasolina y 120 de tacos", "gasté 500 en el súper y 200 en ropa"), responde con UN ARRAY JSON de objetos:
+
+\`\`\`json
+[
+  {
+    "concepto": "Gasolina",
+    "monto": 400,
+    "tipo": "gasto",
+    "categoria": "Transporte",
+    "cuenta_hint": null,
+    "mensaje": "Registré 2 movimientos: gasolina y tacos"
+  },
+  {
+    "concepto": "Tacos",
+    "monto": 120,
+    "tipo": "gasto",
+    "categoria": "Comida y bebida",
+    "cuenta_hint": null,
+    "mensaje": "Registré 2 movimientos: gasolina y tacos"
+  }
+]
+\`\`\`
+
+Cada objeto individual sigue las mismas reglas de extracción que el objeto único. El campo "mensaje" debe ser el MISMO en todos los objetos del array, y debe resumir todos los movimientos detectados.
 
 Si NO detectas una acción clara, responde SOLO con texto conversacional, sin bloque JSON.`
   }

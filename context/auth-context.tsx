@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
+import { useStore } from '@/lib/store'
 
 type AuthContextValue = {
   user: User | null
@@ -23,25 +24,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
-    console.log('[AUTH] AuthProvider montado, chequeando sesión existente...')
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[AUTH] getSession resultado:', session ? `Sesión activa para ${session.user.email}` : 'Sin sesión')
+    async function init() {
+      const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
       setUser(session?.user ?? null)
+      useStore.getState().setUserData(session?.user?.id ?? null)
       setLoading(false)
-    })
+    }
+    init()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[AUTH] onAuthStateChange evento:', event, session ? `usuario ${session.user.email}` : 'sin sesión')
       setSession(session)
       setUser(session?.user ?? null)
+      useStore.getState().setUserData(session?.user?.id ?? null)
       setLoading(false)
     })
 
     return () => {
-      console.log('[AUTH] AuthProvider desmontando')
       subscription.unsubscribe()
     }
   }, [])

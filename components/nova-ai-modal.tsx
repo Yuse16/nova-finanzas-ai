@@ -8,6 +8,7 @@ import { GlassSheet } from './ui/glass-sheet'
 import { sendChatMessage, type NovaIntent, type DetectedData } from '@/lib/services/openrouter'
 import { sendHybridMessage, type HybridResult, getConnectionStatus } from '@/lib/services/hybrid-ai'
 import { fmt } from '@/lib/format'
+import { accountTypeToMethod } from '@/lib/catalog'
 import { useStore } from '@/lib/store'
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition'
 
@@ -17,6 +18,7 @@ type ChatMessage = {
   content: string
   intent?: NovaIntent
   data?: DetectedData | null
+  multiData?: DetectedData[]
   confirmed?: boolean
 }
 
@@ -65,8 +67,17 @@ export function NovaAIModal() {
     msg: ChatMessage
     data: DetectedData
     type: 'addExpense' | 'addIncome'
+    dataIndex?: number
   } | null>(null)
   const [showAccountPicker, setShowAccountPicker] = useState(false)
+  const [editState, setEditState] = useState<{
+    msgId: string
+    dataIndex?: number
+    concepto: string
+    monto: string
+    categoria: string
+  } | null>(null)
+  const [confirmedItems, setConfirmedItems] = useState<Set<string>>(new Set())
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isHoldingRef = useRef(false)
   const didHoldRef = useRef(false)
@@ -206,6 +217,7 @@ export function NovaAIModal() {
         content: response.source === 'nova-core' ? `⚡ ${response.text}` : response.text,
         intent: response.intent,
         data: response.data,
+        multiData: response.multiData,
       }
       setMessages(prev => [...prev, assistantMsg])
     } catch (e) {
@@ -256,83 +268,132 @@ export function NovaAIModal() {
     return null
   }
 
-  function doSaveAction(msg: ChatMessage, accountId: string) {
-    if (!msg.data) return
-    if (msg.intent === 'addExpense') {
+  function getMethodForAccount(accountId: string): string {
+    const acc = data.accounts.find((a) => a.id === accountId)
+    if (!acc) return 'Otro'
+    return accountTypeToMethod[acc.type] || 'Otro'
+  }
+
+  function doSaveAction(msg: ChatMessage, accountId: string, dataIndex?: number) {
+    const targetData = dataIndex !== undefined && msg.multiData
+      ? msg.multiData[dataIndex]
+      : msg.data
+    if (!targetData) return
+
+    const method = getMethodForAccount(accountId)
+
+    if (msg.intent === 'addExpense' || targetData.tipo === 'gasto' || targetData.tipo === 'prestamo') {
       addMovement({
-        title: msg.data.concepto || 'Gasto',
-        category: msg.data.categoria || 'General',
-        amount: msg.data.monto || 0,
-        type: msg.data.tipo === 'prestamo' ? 'prestamo' : 'gasto',
+        title: targetData.concepto || 'Gasto',
+        category: targetData.categoria || 'General',
+        amount: targetData.monto || 0,
+        type: targetData.tipo === 'prestamo' ? 'prestamo' : 'gasto',
         accountId,
         toAccountId: null,
-        method: 'Otro',
+        method,
         date: new Date().toISOString(),
         person: '',
         note: '',
         icon: 'wallet',
         color: '#ef4444',
       })
-      setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, confirmed: true } : m))
-    }
-    if (msg.intent === 'addIncome') {
+    } else if (msg.intent === 'addIncome' || targetData.tipo === 'ingreso' || targetData.tipo === 'me_prestaron') {
       addMovement({
-        title: msg.data.concepto || 'Ingreso',
+        title: targetData.concepto || 'Ingreso',
         category: 'Ingreso',
-        amount: msg.data.monto || 0,
+        amount: targetData.monto || 0,
         type: 'ingreso',
         accountId,
         toAccountId: null,
-        method: 'Otro',
+        method,
         date: new Date().toISOString(),
         person: '',
         note: '',
         icon: 'wallet',
         color: '#22c55e',
       })
+    }
+
+    if (dataIndex !== undefined && msg.multiData) {
+      const key = `${msg.id}-${dataIndex}`
+      const updatedSet = new Set(confirmedItems)
+      updatedSet.add(key)
+      setConfirmedItems(updatedSet)
+      const allConfirmed = msg.multiData.every((_, i) =>
+        updatedSet.has(`${msg.id}-${i}`)
+      )
+      if (allConfirmed) {
+        setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, confirmed: true } : m))
+      }
+    } else {
       setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, confirmed: true } : m))
     }
-    if (msg.intent === 'createGoal' && msg.data) {
+
+    if (msg.intent === 'createGoal' && targetData) {
       addGoal({
-        title: msg.data.concepto || msg.data.titulo || 'Meta',
+        title: targetData.concepto || targetData.titulo || 'Meta',
         saved: 0,
-        target: msg.data.monto || 0,
+        target: targetData.monto || 0,
         date: new Date().toISOString().split('T')[0],
         icon: 'target',
         color: '#3b82f6',
       })
       setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, confirmed: true } : m))
     }
+
     setPendingAction(null)
     setShowAccountPicker(false)
   }
 
-  function confirmIntent(msg: ChatMessage) {
-    if (!msg.data) return
+  function confirmIntent(msg: ChatMessage, dataIndex?: number) {
+    const targetData = dataIndex !== undefined && msg.multiData
+      ? msg.multiData[dataIndex]
+      : msg.data
+    if (!targetData) return
 
     if (msg.intent === 'createGoal') {
-      // Goals don't need account selection
-      return doSaveAction(msg, '')
+      return doSaveAction(msg, '', dataIndex)
     }
 
-    const resolvedId = resolveAccount(msg.data.cuenta_hint)
+    const resolvedId = resolveAccount(targetData.cuenta_hint)
     if (resolvedId === '__MULTIPLE__' || resolvedId === null) {
-      setPendingAction({ msg, data: msg.data, type: msg.intent as 'addExpense' | 'addIncome' })
+      setPendingAction({ msg, data: targetData, type: msg.intent as 'addExpense' | 'addIncome', dataIndex })
       setShowAccountPicker(true)
       return
     }
-    doSaveAction(msg, resolvedId)
+    doSaveAction(msg, resolvedId, dataIndex)
+  }
+
+  function cancelItem(msgId: string, dataIndex?: number) {
+    if (dataIndex !== undefined) {
+      const key = `${msgId}-${dataIndex}`
+      setConfirmedItems(prev => new Set(prev).add(key))
+    } else {
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, confirmed: true } : m))
+    }
   }
 
   function handleAccountSelect(accountId: string) {
     if (!pendingAction) return
-    doSaveAction(pendingAction.msg, accountId)
+    doSaveAction(pendingAction.msg, accountId, pendingAction.dataIndex)
   }
 
-  function intentCard(msg: ChatMessage) {
-    if (!msg.data || msg.confirmed) return null
+  function renderDataCard(data: DetectedData, msg: ChatMessage, dataIndex?: number) {
+    const isExpense = msg.intent === 'addExpense' || data.tipo === 'gasto' || data.tipo === 'prestamo'
+    const label = isExpense ? 'Gasto detectado' : 'Ingreso detectado'
+    const btnColor = isExpense ? 'bg-red-500' : 'bg-green-500'
 
-    const isPending = pendingAction?.msg.id === msg.id
+    const itemKey = dataIndex !== undefined ? `${msg.id}-${dataIndex}` : msg.id
+    const isItemConfirmed = dataIndex !== undefined
+      ? confirmedItems.has(itemKey)
+      : msg.confirmed
+
+    if (isItemConfirmed) return null
+
+    const isEditing = editState?.msgId === msg.id && editState?.dataIndex === (dataIndex ?? undefined)
+
+    const isPending = pendingAction?.msg.id === msg.id &&
+      pendingAction?.dataIndex === (dataIndex ?? undefined)
     const accountPicker = isPending && showAccountPicker ? (
       <div className="mt-2 rounded-xl bg-white/70 dark:bg-white/[0.06] border border-gray-100 dark:border-white/10 p-2">
         <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -363,45 +424,155 @@ export function NovaAIModal() {
       </div>
     ) : null
 
-    if (msg.intent === 'addExpense') {
+    const borderClass = isExpense ? 'border-red-100 dark:border-red-900/30' : 'border-green-100 dark:border-green-900/30'
+    const textAccentClass = isExpense ? 'text-red-500' : 'text-green-500'
+
+    if (isEditing) {
       return (
-        <div>
-          <div className="mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border border-red-100 dark:border-red-900/30 p-3">
-            <p className="text-xs font-semibold text-red-500 uppercase tracking-wider">Gasto detectado</p>
-            <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">Categoría: <span className="font-medium">{msg.data.categoria}</span></p>
-            <p className="text-sm text-gray-700 dark:text-gray-200">Monto: <span className="font-medium">${fmt(msg.data.monto || 0)}</span></p>
-            <button type="button" onClick={() => confirmIntent(msg)} className="mt-2 w-full rounded-lg bg-red-500 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform">Guardar gasto</button>
+        <div key={itemKey}>
+          <div className={`mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border ${borderClass} p-3`}>
+            <p className={`text-xs font-semibold ${textAccentClass} uppercase tracking-wider`}>{label} — editando</p>
+            <div className="mt-2 space-y-2">
+              <input
+                type="text"
+                value={editState?.concepto ?? ''}
+                onChange={(e) => setEditState(prev => prev ? { ...prev, concepto: e.target.value } : null)}
+                className="w-full rounded-lg bg-white/80 dark:bg-white/[0.12] border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50"
+                placeholder="Concepto"
+              />
+              <input
+                type="number"
+                value={editState?.monto ?? '0'}
+                onChange={(e) => setEditState(prev => prev ? { ...prev, monto: e.target.value } : null)}
+                className="w-full rounded-lg bg-white/80 dark:bg-white/[0.12] border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50"
+                placeholder="Monto"
+              />
+              <select
+                value={editState?.categoria ?? ''}
+                onChange={(e) => setEditState(prev => prev ? { ...prev, categoria: e.target.value } : null)}
+                className="w-full rounded-lg bg-white/80 dark:bg-white/[0.12] border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50"
+              >
+                {['Comida y bebida', 'Café', 'Transporte', 'Servicios', 'Compras', 'Entretenimiento', 'Salud', 'Educación', 'Ingreso', 'General', 'Hogar', 'Ropa', 'Tecnología', 'Casa', 'Deudas'].map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const target = dataIndex !== undefined && msg.multiData
+                    ? msg.multiData[dataIndex]
+                    : msg.data
+                  if (!target) return
+                  target.concepto = editState?.concepto || target.concepto
+                  target.monto = parseFloat(editState?.monto || '0') || target.monto
+                  target.categoria = editState?.categoria || target.categoria
+                  setEditState(null)
+                }}
+                className={`flex-1 rounded-lg ${btnColor} py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform`}
+              >
+                Aplicar
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditState(null)}
+                className="flex-1 rounded-lg bg-gray-300 dark:bg-gray-600 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 active:scale-[0.98] transition-transform"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
-          {accountPicker}
         </div>
       )
     }
 
-    if (msg.intent === 'addIncome') {
-      return (
-        <div>
-          <div className="mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border border-green-100 dark:border-green-900/30 p-3">
-            <p className="text-xs font-semibold text-green-500 uppercase tracking-wider">Ingreso detectado</p>
-            <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">Monto: <span className="font-medium">${fmt(msg.data.monto || 0)}</span></p>
-            <button type="button" onClick={() => confirmIntent(msg)} className="mt-2 w-full rounded-lg bg-green-500 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform">Guardar ingreso</button>
+    return (
+      <div key={itemKey}>
+        <div className={`mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border ${borderClass} p-3`}>
+          <div className="flex items-center justify-between">
+            <p className={`text-xs font-semibold ${textAccentClass} uppercase tracking-wider`}>
+              {label}
+              {dataIndex !== undefined && msg.multiData && msg.multiData.length > 1
+                ? ` (${dataIndex! + 1}/${msg.multiData.length})`
+                : ''}
+            </p>
           </div>
-          {accountPicker}
+          <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">
+            Concepto: <span className="font-medium">{data.concepto || '—'}</span>
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-200">
+            Categoría: <span className="font-medium">{data.categoria}</span>
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-200">
+            Monto: <span className="font-medium">${fmt(data.monto || 0)}</span>
+          </p>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={() => confirmIntent(msg, dataIndex)}
+              className={`flex-1 rounded-lg ${btnColor} py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform`}
+            >
+              Guardar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditState({
+                  msgId: msg.id,
+                  dataIndex,
+                  concepto: data.concepto || '',
+                  monto: String(data.monto || 0),
+                  categoria: data.categoria || 'General',
+                })
+              }}
+              className="flex-1 rounded-lg bg-blue-500 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => cancelItem(msg.id, dataIndex)}
+              className="flex-1 rounded-lg bg-gray-300 dark:bg-gray-600 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 active:scale-[0.98] transition-transform"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
-      )
-    }
+        {accountPicker}
+      </div>
+    )
+  }
 
+  function intentCard(msg: ChatMessage) {
+    if (msg.confirmed) return null
+
+    // createGoal is handled separately (no account picker needed)
     if (msg.intent === 'createGoal') {
+      const targetData = msg.multiData?.[0] ?? msg.data
+      if (!targetData) return null
       return (
         <div className="mt-3 rounded-xl bg-white/50 dark:bg-white/[0.08] border border-blue-100 dark:border-blue-900/30 p-3">
           <p className="text-xs font-semibold text-blue-500 uppercase tracking-wider">Meta detectada</p>
-          <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">Título: <span className="font-medium">{msg.data.titulo}</span></p>
-          <p className="text-sm text-gray-700 dark:text-gray-200">Monto: <span className="font-medium">${fmt(msg.data.monto || 0)}</span></p>
+          <p className="text-sm mt-1 text-gray-700 dark:text-gray-200">Título: <span className="font-medium">{targetData.titulo || targetData.concepto}</span></p>
+          <p className="text-sm text-gray-700 dark:text-gray-200">Monto: <span className="font-medium">${fmt(targetData.monto || 0)}</span></p>
           <button type="button" onClick={() => confirmIntent(msg)} className="mt-2 w-full rounded-lg bg-blue-500 py-2 text-sm font-semibold text-white active:scale-[0.98] transition-transform">Crear meta</button>
         </div>
       )
     }
 
-    return null
+    // Multi-movement: render one card per data item
+    if (msg.multiData && msg.multiData.length > 0) {
+      return (
+        <div>
+          {msg.multiData.map((d, i) => renderDataCard(d, msg, i))}
+        </div>
+      )
+    }
+
+    if (!msg.data) return null
+
+    return renderDataCard(msg.data, msg)
   }
 
   function dataCard(msg: ChatMessage) {

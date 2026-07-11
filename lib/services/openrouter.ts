@@ -25,6 +25,7 @@ export type AiResponse = {
   text: string
   intent: NovaIntent
   data: DetectedData | null
+  multiData?: DetectedData[]
 }
 
 function sanitizeConcepto(raw: string): string {
@@ -36,8 +37,19 @@ function sanitizeConcepto(raw: string): string {
     .replace(/^./, (c) => c.toUpperCase())
 }
 
-function parseIntent(text: string): { text: string; intent: NovaIntent; data: DetectedData | null } {
+function parseDataItem(item: Record<string, unknown>): DetectedData {
+  const d: DetectedData = {}
+  if (item.concepto) d.concepto = sanitizeConcepto(item.concepto as string)
+  if (item.monto !== undefined) d.monto = item.monto as number
+  if (item.tipo) d.tipo = item.tipo as DetectedData['tipo']
+  if (item.categoria) d.categoria = item.categoria as string
+  if (item.cuenta_hint !== undefined) d.cuenta_hint = item.cuenta_hint as string | null
+  return d
+}
+
+function parseIntent(text: string): AiResponse {
   let data: DetectedData | null = null
+  let multiData: DetectedData[] | undefined
   let intent: NovaIntent = 'unknown'
 
   // Try to find a JSON block between ```json and ```
@@ -47,8 +59,8 @@ function parseIntent(text: string): { text: string; intent: NovaIntent; data: De
   if (jsonBlockMatch) {
     jsonStr = jsonBlockMatch[1].trim()
   } else {
-    // Fallback: try to find a standalone JSON object at the end of the text
-    const jsonObjMatch = text.match(/\{[\s\S]*"mensaje"[\s\S]*\}/)
+    // Fallback: try to find a standalone JSON object/array at the end of the text
+    const jsonObjMatch = text.match(/(\{[\s\S]*"mensaje"[\s\S]*\}|\[[\s\S]*"mensaje"[\s\S]*\])/)
     if (jsonObjMatch) {
       jsonStr = jsonObjMatch[0]
     }
@@ -57,24 +69,34 @@ function parseIntent(text: string): { text: string; intent: NovaIntent; data: De
   if (jsonStr) {
     try {
       const parsed = JSON.parse(jsonStr)
-      data = {}
 
-      if (parsed.concepto) data.concepto = sanitizeConcepto(parsed.concepto)
-      if (parsed.monto !== undefined) data.monto = parsed.monto
-      if (parsed.tipo) data.tipo = parsed.tipo
-      if (parsed.categoria) data.categoria = parsed.categoria
-      if (parsed.cuenta_hint !== undefined) data.cuenta_hint = parsed.cuenta_hint
+      // Handle array of movements (multi-movement)
+      if (Array.isArray(parsed)) {
+        multiData = parsed.map(parseDataItem)
+        data = multiData[0] ?? null
 
-      // Determine intent based on tipo
-      if (parsed.tipo === 'gasto' || parsed.tipo === 'prestamo') {
-        intent = 'addExpense'
-      } else if (parsed.tipo === 'ingreso' || parsed.tipo === 'me_prestaron') {
-        intent = 'addIncome'
+        // Determine intent from first item
+        const first = parsed[0]
+        if (first?.tipo === 'gasto' || first?.tipo === 'prestamo') {
+          intent = 'addExpense'
+        } else if (first?.tipo === 'ingreso' || first?.tipo === 'me_prestaron') {
+          intent = 'addIncome'
+        }
+      } else {
+        // Single object
+        data = parseDataItem(parsed)
+
+        if (parsed.tipo === 'gasto' || parsed.tipo === 'prestamo') {
+          intent = 'addExpense'
+        } else if (parsed.tipo === 'ingreso' || parsed.tipo === 'me_prestaron') {
+          intent = 'addIncome'
+        }
       }
 
       // Use mensaje as the display text, strip the JSON block
-      if (parsed.mensaje) {
-        text = parsed.mensaje
+      const msgText = Array.isArray(parsed) ? (parsed[0]?.mensaje as string) : (parsed.mensaje as string)
+      if (msgText) {
+        text = msgText
       } else {
         text = text.replace(/```json[\s\S]*?```/g, '').trim()
       }
@@ -86,7 +108,7 @@ function parseIntent(text: string): { text: string; intent: NovaIntent; data: De
   // Fallback: strip any remaining JSON blocks from display text
   text = text.replace(/```json[\s\S]*?```/g, '').trim()
 
-  return { text, intent, data }
+  return { text, intent, data, multiData }
 }
 
 export async function sendChatMessage(

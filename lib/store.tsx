@@ -16,6 +16,7 @@ import { storage } from './storage'
 import { snapshotStorage } from './storage-snapshots'
 import { uid } from './format'
 import { getAccountTypeMeta } from './catalog'
+import { supabaseStorage } from './supabase/storage'
 
 // ---- Balance side-effects -------------------------------------------------
 
@@ -77,6 +78,8 @@ function applyMovement(accounts: Account[], m: Movement, sign = 1): Account[] {
 export type StoreValue = {
   data: AppData
   ready: boolean
+  userId: string | null
+  setUserData: (userId: string | null) => Promise<void>
   // account helpers
   addAccount: (input: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>) => void
   updateAccount: (account: Account) => void
@@ -107,6 +110,30 @@ export type StoreValue = {
 export const useStore = create<StoreValue>((set, get) => ({
   data: emptyAppData(),
   ready: false,
+  userId: null,
+
+  setUserData: async (userId) => {
+    if (!userId) {
+      set({ userId })
+      return
+    }
+
+    // Mark as not-ready to prevent the subscriber from writing stale
+    // offline data to Supabase while the remote load is in flight.
+    set({ userId, ready: false })
+
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      const remote = await supabaseStorage.load(userId).catch(() => null)
+      if (remote) {
+        set({ data: remote, ready: true })
+        storage.save(remote)
+        return
+      }
+    }
+
+    // Fallback: keep IndexedDB data (already loaded by auto-hydrate)
+    set({ ready: true })
+  },
 
   addAccount: (input) => {
     set((state) => {
@@ -309,7 +336,9 @@ export const useStore = create<StoreValue>((set, get) => ({
   },
 
   reset: () => {
+    const uid = get().userId
     storage.clear()
+    if (uid) supabaseStorage.clear(uid)
     set({ data: emptyAppData() })
   },
 
@@ -352,10 +381,16 @@ if (typeof window !== 'undefined') {
     useStore.setState({ data: loaded, ready: true })
   })
 
-  // Subscribe to updates and save to storage
+  // Subscribe to updates and save to both IndexedDB and Supabase
   useStore.subscribe((state) => {
-    if (state.ready) {
-      storage.save(state.data)
+    if (!state.ready) return
+
+    // Always save to IndexedDB (offline cache)
+    storage.save(state.data)
+
+    // Fire-and-forget save to Supabase when user is authenticated
+    if (state.userId) {
+      supabaseStorage.save(state.userId, state.data)
     }
   })
 }
