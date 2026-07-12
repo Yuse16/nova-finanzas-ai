@@ -232,6 +232,8 @@ export function computeStabilitySnapshot(
   movements: Movement[],
   reminders: Reminder[],
   userId: string = '',
+  userReservedMoney: number = 0,
+  userEmergencyMargin: number = 0,
 ): StabilitySnapshot {
   const computedAt = Date.now()
 
@@ -267,8 +269,8 @@ export function computeStabilitySnapshot(
 
   // 6. Dinero disponible
   const liquidBalance = getLiquidBalance(accounts)
-  const reservedMoney = 0 // Fase 5.2 conectará la config del usuario
-  const emergencyMargin = 0 // Fase 5.2 conectará la config del usuario
+  const reservedMoney = userReservedMoney
+  const emergencyMargin = userEmergencyMargin
 
   const realAvailableMoney =
     liquidBalance !== null

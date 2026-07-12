@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, RotateCcw, ChevronDown, Palette, Type, LayoutDashboard, CreditCard, Grid3x3, Accessibility, Sun, Moon, Monitor } from 'lucide-react'
+import { ArrowLeft, RotateCcw, ChevronDown, Palette, Type, LayoutDashboard, CreditCard, Grid3x3, Accessibility, Sun, Moon, Monitor, Wallet } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCustomization } from '@/context/ThemeCustomizationContext'
+import { useStore } from '@/lib/store'
+import { fmt } from '@/lib/format'
 import { PreviewCard } from '@/components/preview-card'
 import type { CustomizationSection, CardSettings, LayoutSettings, TypographySettings, AccessibilitySettings } from '@/lib/customization-types'
 import { availableFonts } from '@/lib/types'
@@ -18,22 +20,24 @@ const PRIMARY_COLORS = [
   { label: 'Rojo', value: 'oklch(0.6 0.18 25)' },
 ]
 
-const SECTION_ICONS: Record<CustomizationSection, React.ReactNode> = {
+const SECTION_ICONS: Record<string, React.ReactNode> = {
   appearance: <Palette className="size-5" />,
   typography: <Type className="size-5" />,
   dashboard: <LayoutDashboard className="size-5" />,
   cards: <CreditCard className="size-5" />,
   layout: <Grid3x3 className="size-5" />,
   accessibility: <Accessibility className="size-5" />,
+  finanzas: <Wallet className="size-5" />,
 }
 
-const SECTION_LABELS: Record<CustomizationSection, string> = {
+const SECTION_LABELS: Record<string, string> = {
   appearance: 'Apariencia',
   typography: 'Tipografía',
   dashboard: 'Dashboard',
   cards: 'Tarjetas',
   layout: 'Layout',
   accessibility: 'Accesibilidad',
+  finanzas: 'Finanzas',
 }
 
 function SectionCard({ section, children, defaultOpen }: { section: CustomizationSection; children: React.ReactNode; defaultOpen?: boolean }) {
@@ -161,6 +165,8 @@ function ColorButton({ color, selected, onClick }: { color: string; selected: bo
 
 export default function PersonalizacionPage() {
   const { settings, updateAppearance, updateTypography, updateDashboard, updateCards, updateLayout, updateAccessibility, resetAll } = useCustomization()
+  const updateProfile = useStore((s) => s.updateProfile)
+  const profile = useStore((s) => s.data.profile)
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-32">
@@ -343,6 +349,43 @@ export default function PersonalizacionPage() {
               value={settings.dashboard.showQuickActions}
               onChange={v => updateDashboard('showQuickActions', v)}
             />
+          </div>
+        </SectionCard>
+
+        <SectionCard section="finanzas">
+          <div className="flex flex-col gap-3 mt-3">
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 block">
+                Dinero reservado <span className="text-xs font-normal text-gray-400 dark:text-gray-500">({fmt(profile?.reservedMoney ?? 0)} actual)</span>
+              </label>
+              <input
+                type="number"
+                min={0}
+                placeholder="0"
+                defaultValue={profile?.reservedMoney ?? 0}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value)
+                  if (!isNaN(val) && val >= 0) updateProfile({ reservedMoney: val })
+                }}
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-white/10 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 block">
+                Margen de emergencia <span className="text-xs font-normal text-gray-400 dark:text-gray-500">({fmt(profile?.emergencyMargin ?? 0)} actual)</span>
+              </label>
+              <input
+                type="number"
+                min={0}
+                placeholder="0"
+                defaultValue={profile?.emergencyMargin ?? 0}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value)
+                  if (!isNaN(val) && val >= 0) updateProfile({ emergencyMargin: val })
+                }}
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-white/10 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+              />
+            </div>
           </div>
         </SectionCard>
 

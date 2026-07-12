@@ -61,6 +61,7 @@ export type CustomizationSection =
   | 'cards'
   | 'layout'
   | 'accessibility'
+  | 'finanzas'
 
 export const CUSTOMIZATION_STORAGE_KEY = 'nova-finanzas:customization'
 

@@ -10,7 +10,8 @@ import type {
   UserProfile,
   AssistantMessage,
   FinancialSnapshot,
-} from './types' // NEW: Import AssistantMessage
+  StabilitySnapshot,
+} from './types'
 import { emptyAppData } from './types'
 import { storage } from './storage'
 import { snapshotStorage } from './storage-snapshots'
@@ -106,12 +107,21 @@ export type StoreValue = {
   // NEW: Assistant History
   addAssistantMessage: (message: Omit<AssistantMessage, 'id' | 'createdAt'>) => void;
   updateSelectedFont: (font: string) => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
+}
+
+// Cache for the latest stability snapshot (not stored in Zustand to avoid subscribe loops)
+let _cachedSnapshot: StabilitySnapshot | null = null
+
+export function getCachedSnapshot(): StabilitySnapshot | null {
+  return _cachedSnapshot
 }
 
 export const useStore = create<StoreValue>((set, get) => ({
   data: emptyAppData(),
   ready: false,
   userId: null,
+  latestSnapshot: null,
 
   setUserData: async (userId) => {
     if (!userId) {
@@ -361,6 +371,15 @@ export const useStore = create<StoreValue>((set, get) => ({
     }))
   },
 
+  updateProfile: (updates) => {
+    set((state) => ({
+      data: {
+        ...state.data,
+        profile: state.data.profile ? { ...state.data.profile, ...updates } : null,
+      },
+    }))
+  },
+
   // NEW: Assistant History Actions
   addAssistantMessage: (message) => {
     set((state) => ({
@@ -394,15 +413,17 @@ if (typeof window !== 'undefined') {
       supabaseStorage.save(state.userId, state.data)
     }
 
-    // Compute and persist stability snapshot (debounced by Zustand batching)
+    // Compute, persist, and cache stability snapshot
     if (state.userId && state.data.accounts.length > 0) {
-      const snapshot = computeStabilitySnapshot(
+      _cachedSnapshot = computeStabilitySnapshot(
         state.data.accounts,
         state.data.movements,
         state.data.reminders,
         state.userId,
+        state.data.profile?.reservedMoney ?? 0,
+        state.data.profile?.emergencyMargin ?? 0,
       )
-      supabaseStorage.saveSnapshot(snapshot)
+      supabaseStorage.saveSnapshot(_cachedSnapshot)
     }
   })
 }

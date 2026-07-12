@@ -25,6 +25,8 @@ type ProfileRow = {
   created_at: number
   selected_font: string
   accounts_skipped: boolean | null
+  reserved_money: number | null
+  emergency_margin: number | null
 }
 
 type AccountRow = {
@@ -110,6 +112,8 @@ function mapProfile(row: ProfileRow): UserProfile {
     createdAt: row.created_at,
     selectedFont: row.selected_font,
     accountsSkipped: row.accounts_skipped ?? undefined,
+    reservedMoney: row.reserved_money ?? undefined,
+    emergencyMargin: row.emergency_margin ?? undefined,
   }
 }
 
@@ -202,6 +206,8 @@ function toProfileRow(userId: string, profile: UserProfile): ProfileRow {
     created_at: profile.createdAt,
     selected_font: profile.selectedFont,
     accounts_skipped: profile.accountsSkipped ?? null,
+    reserved_money: profile.reservedMoney ?? null,
+    emergency_margin: profile.emergencyMargin ?? null,
   }
 }
 

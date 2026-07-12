@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, TrendingUp, TrendingDown, DollarSign, Calendar } from 'lucide-react'
 import { useUI } from '@/lib/ui-context'
-import { useStore } from '@/lib/store'
+import { useStore, getCachedSnapshot } from '@/lib/store'
 import { useCustomization } from '@/context/ThemeCustomizationContext'
 import { fmt, fmtShort } from '@/lib/format'
 import { isAccountLiability } from '@/lib/catalog'
@@ -77,10 +77,17 @@ export function FinancialSummaryFull() {
 
   const name = data.profile?.name ?? 'Usuario'
 
+  const snapshot = getCachedSnapshot()
+
   const availableBalance = useMemo(
     () => data.accounts.filter((a) => !isAccountLiability(a)).reduce((sum, acc) => sum + acc.balance, 0),
     [data.accounts],
   )
+
+  const reservedMoney = data.profile?.reservedMoney ?? 0
+  const emergencyMargin = data.profile?.emergencyMargin ?? 0
+  const upcomingCommitments = snapshot?.upcomingCommitments ?? null
+  const freeMoney = availableBalance - reservedMoney - (upcomingCommitments ?? 0) - emergencyMargin
 
   // Use type-safe approach
   const allMovements = data.movements
@@ -174,23 +181,76 @@ export function FinancialSummaryFull() {
         </div>
 
         {/* Hero amount */}
-        <div className="relative z-10 px-6">
-          <motion.p
-            className="text-xs font-normal uppercase tracking-widest text-gray-500 dark:text-gray-400"
+        <div className="relative z-10 px-6 space-y-0.5">
+          <motion.div
+            className="flex items-center gap-3"
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2, ease: EASE }}
           >
-            Dinero disponible
-          </motion.p>
-          <motion.p
-            className="text-5xl font-semibold tracking-tight tabular-nums text-gray-900 dark:text-white mt-0.5"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.22, ease: EASE }}
+            <p className="text-xs font-normal uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              Saldo total
+            </p>
+            <p className="text-lg font-semibold tracking-tight tabular-nums text-gray-900 dark:text-white">
+              {fmt(availableBalance)}
+            </p>
+          </motion.div>
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.23, ease: EASE }}
           >
-            {fmt(availableBalance)}
-          </motion.p>
+            <p className="text-xs font-normal uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              Reservado
+            </p>
+            <p className="text-lg font-semibold tracking-tight tabular-nums text-amber-600 dark:text-amber-400">
+              -{fmt(reservedMoney)}
+            </p>
+          </motion.div>
+          {upcomingCommitments !== null && (
+            <motion.div
+              className="flex items-center gap-3"
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.26, ease: EASE }}
+            >
+              <p className="text-xs font-normal uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                Próximos compromisos
+              </p>
+              <p className="text-lg font-semibold tracking-tight tabular-nums text-red-500 dark:text-red-400">
+                -{fmt(upcomingCommitments)}
+              </p>
+            </motion.div>
+          )}
+          {emergencyMargin > 0 && (
+            <motion.div
+              className="flex items-center gap-3"
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.29, ease: EASE }}
+            >
+              <p className="text-xs font-normal uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                Margen emergencia
+              </p>
+              <p className="text-lg font-semibold tracking-tight tabular-nums text-orange-600 dark:text-orange-400">
+                -{fmt(emergencyMargin)}
+              </p>
+            </motion.div>
+          )}
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.32, ease: EASE }}
+          >
+            <p className="text-xs font-normal uppercase tracking-widest text-gray-600 dark:text-gray-300">
+              Libre para gastar
+            </p>
+            <p className={`text-lg font-semibold tracking-tight tabular-nums ${freeMoney >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+              {fmt(freeMoney)}
+            </p>
+          </motion.div>
         </div>
 
         {/* Scrollable content */}

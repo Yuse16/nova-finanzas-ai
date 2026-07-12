@@ -141,6 +141,8 @@ export type UserProfile = {
   createdAt: number
   selectedFont: string
   accountsSkipped?: boolean
+  reservedMoney?: number
+  emergencyMargin?: number
 }
 
 // NEW: Define available font options
