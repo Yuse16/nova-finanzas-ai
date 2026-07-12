@@ -17,6 +17,7 @@ import { snapshotStorage } from './storage-snapshots'
 import { uid } from './format'
 import { getAccountTypeMeta } from './catalog'
 import { supabaseStorage } from './supabase/storage'
+import { computeStabilitySnapshot } from './stability-engine'
 
 // ---- Balance side-effects -------------------------------------------------
 
@@ -391,6 +392,17 @@ if (typeof window !== 'undefined') {
     // Fire-and-forget save to Supabase when user is authenticated
     if (state.userId) {
       supabaseStorage.save(state.userId, state.data)
+    }
+
+    // Compute and persist stability snapshot (debounced by Zustand batching)
+    if (state.userId && state.data.accounts.length > 0) {
+      const snapshot = computeStabilitySnapshot(
+        state.data.accounts,
+        state.data.movements,
+        state.data.reminders,
+        state.userId,
+      )
+      supabaseStorage.saveSnapshot(snapshot)
     }
   })
 }

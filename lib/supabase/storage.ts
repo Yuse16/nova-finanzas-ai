@@ -334,6 +334,68 @@ async function upsertAssistantMessages(userId: string, messages: AssistantMessag
 
 // ---- Public API ------------------------------------------------------------
 
+// ---- Stability Snapshot helpers --------------------------------------------
+
+type SnapshotRow = {
+  id: string
+  user_id: string
+  computed_at: number
+  avg_income: number | null
+  confirmed_income: number | null
+  essential_expenses: number | null
+  variable_expenses: number | null
+  upcoming_commitments: number | null
+  overdue_payments: number | null
+  total_debt: number | null
+  min_debt_payment: number | null
+  weekly_flow: number | null
+  monthly_flow: number | null
+  real_available_money: number | null
+  reserved_money: number | null
+  emergency_margin: number | null
+  coverage_days: number | null
+  deficit_risk: string | null
+  payment_capacity: number | null
+  savings_capacity: number | null
+  recovery_progress: number | null
+  status: string
+}
+
+import type { StabilitySnapshot } from '@/lib/types'
+
+function toSnapshotRow(userId: string, s: StabilitySnapshot): SnapshotRow {
+  return {
+    id: s.id,
+    user_id: userId,
+    computed_at: s.computedAt,
+    avg_income: s.avgIncome,
+    confirmed_income: s.confirmedIncome,
+    essential_expenses: s.essentialExpenses,
+    variable_expenses: s.variableExpenses,
+    upcoming_commitments: s.upcomingCommitments,
+    overdue_payments: s.overduePayments,
+    total_debt: s.totalDebt,
+    min_debt_payment: s.minDebtPayment,
+    weekly_flow: s.weeklyFlow,
+    monthly_flow: s.monthlyFlow,
+    real_available_money: s.realAvailableMoney,
+    reserved_money: s.reservedMoney,
+    emergency_margin: s.emergencyMargin,
+    coverage_days: s.coverageDays,
+    deficit_risk: s.deficitRisk,
+    payment_capacity: s.paymentCapacity,
+    savings_capacity: s.savingsCapacity,
+    recovery_progress: s.recoveryProgress,
+    status: s.status,
+  }
+}
+
+async function upsertSnapshot(userId: string, snapshot: StabilitySnapshot): Promise<void> {
+  const supabase = createClient()
+  const row = toSnapshotRow(userId, snapshot)
+  await supabase.from('stability_snapshots').upsert(row, { onConflict: 'id' })
+}
+
 export const supabaseStorage = {
   async load(userId: string): Promise<AppData | null> {
     const supabase = createClient()
@@ -414,5 +476,10 @@ export const supabaseStorage = {
   async deleteReminder(userId: string, reminderId: string): Promise<void> {
     const supabase = createClient()
     await supabase.from('reminders').delete().eq('id', reminderId).eq('user_id', userId)
+  },
+
+  async saveSnapshot(snapshot: StabilitySnapshot): Promise<void> {
+    if (!snapshot.userId) return
+    await upsertSnapshot(snapshot.userId, snapshot)
   },
 }

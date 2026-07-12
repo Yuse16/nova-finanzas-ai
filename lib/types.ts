@@ -162,6 +162,42 @@ export type AppData = {
 
 export const CURRENT_DATA_VERSION = 1
 
+// ---- Stability Engine types ------------------------------------------------
+
+export type DeficitRisk = 'low' | 'medium' | 'high'
+
+export type StabilityStatus =
+  | 'critical'
+  | 'unstable'
+  | 'recovering'
+  | 'stable'
+  | 'growing'
+
+export type StabilitySnapshot = {
+  id: string
+  userId: string
+  computedAt: number
+  avgIncome: number | null
+  confirmedIncome: number | null
+  essentialExpenses: number | null
+  variableExpenses: number | null
+  upcomingCommitments: number | null
+  overduePayments: number | null
+  totalDebt: number | null
+  minDebtPayment: number | null
+  weeklyFlow: number | null
+  monthlyFlow: number | null
+  realAvailableMoney: number | null
+  reservedMoney: number | null
+  emergencyMargin: number | null
+  coverageDays: number | null
+  deficitRisk: DeficitRisk
+  paymentCapacity: number | null
+  savingsCapacity: number | null
+  recoveryProgress: number | null
+  status: StabilityStatus
+}
+
 export type FinancialSnapshot = {
   id: string
   createdAt: number
