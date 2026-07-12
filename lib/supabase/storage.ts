@@ -2,7 +2,7 @@
 
 import { createClient } from './client'
 import type { AppData, Account, Movement, Goal, Reminder, AssistantMessage, UserProfile } from '@/lib/types'
-import { emptyAppData } from '@/lib/types'
+import { emptyAppData, CURRENT_DATA_VERSION } from '@/lib/types'
 
 /**
  * Supabase-backed storage for Nova Finanzas AI.
@@ -367,7 +367,7 @@ type SnapshotRow = {
   status: string
 }
 
-import type { StabilitySnapshot } from '@/lib/types'
+import type { StabilitySnapshot, RecoveryPlan, WeeklyAction } from '@/lib/types'
 
 function toSnapshotRow(userId: string, s: StabilitySnapshot): SnapshotRow {
   return {
@@ -402,11 +402,96 @@ async function upsertSnapshot(userId: string, snapshot: StabilitySnapshot): Prom
   await supabase.from('stability_snapshots').upsert(row, { onConflict: 'id' })
 }
 
+// ---- Recovery Plan helpers -------------------------------------------------
+
+type RecoveryPlanRow = {
+  id: string
+  user_id: string
+  version: number
+  status: string
+  diagnosis: string
+  weekly_income: number | null
+  essential_expenses: number | null
+  debt_payment_target: number | null
+  emergency_margin: number | null
+  discretionary_limit: number | null
+  weekly_actions: any
+  start_date: string
+  target_date: string | null
+  progress_percentage: number
+  last_recalculated_at: number
+  superseded_by: string | null
+}
+
+function mapRecoveryPlan(row: RecoveryPlanRow): RecoveryPlan {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    version: row.version,
+    status: row.status as RecoveryPlan['status'],
+    diagnosis: row.diagnosis,
+    weeklyIncome: row.weekly_income,
+    essentialExpenses: row.essential_expenses,
+    debtPaymentTarget: row.debt_payment_target,
+    emergencyMargin: row.emergency_margin,
+    discretionaryLimit: row.discretionary_limit,
+    weeklyActions: (row.weekly_actions as WeeklyAction[]) ?? [],
+    startDate: row.start_date,
+    targetDate: row.target_date,
+    progressPercentage: row.progress_percentage,
+    lastRecalculatedAt: row.last_recalculated_at,
+    supersededBy: row.superseded_by,
+  }
+}
+
+function toRecoveryPlanRow(userId: string, p: RecoveryPlan): RecoveryPlanRow {
+  return {
+    id: p.id,
+    user_id: userId,
+    version: p.version,
+    status: p.status,
+    diagnosis: p.diagnosis,
+    weekly_income: p.weeklyIncome,
+    essential_expenses: p.essentialExpenses,
+    debt_payment_target: p.debtPaymentTarget,
+    emergency_margin: p.emergencyMargin,
+    discretionary_limit: p.discretionaryLimit,
+    weekly_actions: JSON.stringify(p.weeklyActions),
+    start_date: p.startDate,
+    target_date: p.targetDate,
+    progress_percentage: p.progressPercentage,
+    last_recalculated_at: p.lastRecalculatedAt,
+    superseded_by: p.supersededBy,
+  }
+}
+
+async function upsertRecoveryPlans(userId: string, plans: RecoveryPlan[]): Promise<void> {
+  if (plans.length === 0) return
+  const supabase = createClient()
+  const rows = plans.map((p) => toRecoveryPlanRow(userId, p))
+  // Chunk to avoid request size limits
+  const chunkSize = 10
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    await supabase.from('recovery_plans').upsert(rows.slice(i, i + chunkSize), { onConflict: 'id' })
+  }
+}
+
+async function loadRecoveryPlans(userId: string): Promise<RecoveryPlan[]> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('recovery_plans')
+    .select('*')
+    .eq('user_id', userId)
+    .order('version', { ascending: false })
+  if (!data) return []
+  return (data as RecoveryPlanRow[]).map(mapRecoveryPlan)
+}
+
 export const supabaseStorage = {
   async load(userId: string): Promise<AppData | null> {
     const supabase = createClient()
 
-    const [profileRes, accountsRes, movementsRes, goalsRes, remindersRes, assistantRes] =
+    const [profileRes, accountsRes, movementsRes, goalsRes, remindersRes, assistantRes, plansRes] =
       await Promise.all([
         supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('accounts').select('*').eq('user_id', userId),
@@ -414,10 +499,10 @@ export const supabaseStorage = {
         supabase.from('goals').select('*').eq('user_id', userId),
         supabase.from('reminders').select('*').eq('user_id', userId),
         supabase.from('assistant_messages').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+        supabase.from('recovery_plans').select('*').eq('user_id', userId).order('version', { ascending: false }),
       ])
 
     if (profileRes.error && accountsRes.error && movementsRes.error) {
-      // Supabase completely unreachable — caller should fall back to IndexedDB
       return null
     }
 
@@ -428,7 +513,8 @@ export const supabaseStorage = {
       goals: (goalsRes.data as GoalRow[] | null)?.map(mapGoal) ?? [],
       reminders: (remindersRes.data as ReminderRow[] | null)?.map(mapReminder) ?? [],
       assistantHistory: (assistantRes.data as AssistantMessageRow[] | null)?.map(mapAssistantMessage) ?? [],
-      version: 1,
+      recoveryPlans: (plansRes.data as RecoveryPlanRow[] | null)?.map(mapRecoveryPlan) ?? [],
+      version: CURRENT_DATA_VERSION,
     }
   },
 
@@ -442,6 +528,7 @@ export const supabaseStorage = {
       upsertGoals(userId, data.goals).catch((e) => errors.push(`goals: ${e.message}`)),
       upsertReminders(userId, data.reminders).catch((e) => errors.push(`reminders: ${e.message}`)),
       upsertAssistantMessages(userId, data.assistantHistory).catch((e) => errors.push(`assistant: ${e.message}`)),
+      upsertRecoveryPlans(userId, data.recoveryPlans).catch((e) => errors.push(`recovery_plans: ${e.message}`)),
     ])
 
     if (errors.length > 0) {
@@ -458,6 +545,7 @@ export const supabaseStorage = {
       supabase.from('goals').delete().eq('user_id', userId),
       supabase.from('reminders').delete().eq('user_id', userId),
       supabase.from('assistant_messages').delete().eq('user_id', userId),
+      supabase.from('recovery_plans').delete().eq('user_id', userId),
     ])
   },
 

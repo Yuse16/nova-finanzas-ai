@@ -11,6 +11,7 @@ import type {
   AssistantMessage,
   FinancialSnapshot,
   StabilitySnapshot,
+  RecoveryPlan,
 } from './types'
 import { emptyAppData } from './types'
 import { storage } from './storage'
@@ -19,6 +20,7 @@ import { uid } from './format'
 import { getAccountTypeMeta } from './catalog'
 import { supabaseStorage } from './supabase/storage'
 import { computeStabilitySnapshot } from './stability-engine'
+import { generateRecoveryPlan, shouldRecalculate, type TriggerEvent } from './recovery-engine'
 
 // ---- Balance side-effects -------------------------------------------------
 
@@ -108,10 +110,14 @@ export type StoreValue = {
   addAssistantMessage: (message: Omit<AssistantMessage, 'id' | 'createdAt'>) => void;
   updateSelectedFont: (font: string) => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
+  // recovery plans
+  setRecoveryPlans: (plans: RecoveryPlan[]) => void
+  generateRecoveryPlanAction: (trigger?: TriggerEvent | null) => void
 }
 
 // Cache for the latest stability snapshot (not stored in Zustand to avoid subscribe loops)
 let _cachedSnapshot: StabilitySnapshot | null = null
+let _prevSnapshotForTrigger: StabilitySnapshot | null = null
 
 export function getCachedSnapshot(): StabilitySnapshot | null {
   return _cachedSnapshot
@@ -380,6 +386,33 @@ export const useStore = create<StoreValue>((set, get) => ({
     }))
   },
 
+  setRecoveryPlans: (plans) => {
+    set((state) => ({
+      data: { ...state.data, recoveryPlans: plans },
+    }))
+  },
+
+  generateRecoveryPlanAction: (trigger) => {
+    const { data, userId } = get()
+    if (!userId) return
+    const snapshot = _cachedSnapshot
+    if (!snapshot) return
+
+    const activePlan = data.recoveryPlans.find((p) => p.status === 'active') ?? null
+    const newPlan = generateRecoveryPlan(
+      data.accounts,
+      data.movements,
+      data.reminders,
+      data.goals,
+      snapshot,
+      activePlan,
+      trigger ?? null,
+    )
+
+    const plans = [newPlan, ...data.recoveryPlans]
+    set({ data: { ...data, recoveryPlans: plans } })
+  },
+
   // NEW: Assistant History Actions
   addAssistantMessage: (message) => {
     set((state) => ({
@@ -424,6 +457,26 @@ if (typeof window !== 'undefined') {
         state.data.profile?.emergencyMargin ?? 0,
       )
       supabaseStorage.saveSnapshot(_cachedSnapshot)
+
+      // Auto-recalculate recovery plan on trigger events
+      if (_prevSnapshotForTrigger) {
+        const trigger = shouldRecalculate(_prevSnapshotForTrigger, _cachedSnapshot)
+        if (trigger) {
+          const activePlan = state.data.recoveryPlans.find((p) => p.status === 'active') ?? null
+          const newPlan = generateRecoveryPlan(
+            state.data.accounts,
+            state.data.movements,
+            state.data.reminders,
+            state.data.goals,
+            _cachedSnapshot,
+            activePlan,
+            trigger,
+          )
+          const plans = [newPlan, ...state.data.recoveryPlans]
+          useStore.setState({ data: { ...state.data, recoveryPlans: plans } })
+        }
+      }
+      _prevSnapshotForTrigger = _cachedSnapshot
     }
   })
 }

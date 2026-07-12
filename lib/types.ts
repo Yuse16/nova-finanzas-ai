@@ -159,10 +159,11 @@ export type AppData = {
   goals: Goal[]
   reminders: Reminder[]
   assistantHistory: AssistantMessage[]; // NEW: Assistant History
+  recoveryPlans: RecoveryPlan[]
   version: number
 }
 
-export const CURRENT_DATA_VERSION = 1
+export const CURRENT_DATA_VERSION = 2
 
 // ---- Stability Engine types ------------------------------------------------
 
@@ -200,6 +201,34 @@ export type StabilitySnapshot = {
   status: StabilityStatus
 }
 
+// ---- Recovery Plan types --------------------------------------------------
+
+export type WeeklyAction = {
+  day: string       // 'lunes' | 'martes' | ... or a relative day
+  action: string    // what to do
+  amount: number    // expected cost/saving
+  category: string  // 'essential' | 'debt' | 'saving' | 'discretionary'
+}
+
+export type RecoveryPlan = {
+  id: string
+  userId: string
+  version: number
+  status: 'active' | 'superseded' | 'completed'
+  diagnosis: string
+  weeklyIncome: number | null
+  essentialExpenses: number | null
+  debtPaymentTarget: number | null
+  emergencyMargin: number | null
+  discretionaryLimit: number | null
+  weeklyActions: WeeklyAction[]
+  startDate: string       // ISO date
+  targetDate: string | null
+  progressPercentage: number
+  lastRecalculatedAt: number
+  supersededBy: string | null
+}
+
 export type FinancialSnapshot = {
   id: string
   createdAt: number
@@ -233,6 +262,7 @@ export function emptyAppData(): AppData {
     goals: [],
     reminders: [],
     assistantHistory: [], // Initialize new field
+    recoveryPlans: [],
     version: CURRENT_DATA_VERSION,
   }
 }
