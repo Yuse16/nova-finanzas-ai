@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               exit={{ opacity: 0, filter: 'blur(6px)' }}
               transition={{ duration: 0.3, ease: [0.33, 1, 0.68, 1] }}
             >
-              <main className="mx-auto flex w-full max-w-lg flex-col gap-6 px-5 pb-40 pt-6">
+              <main className="mx-auto flex w-full max-w-lg flex-col gap-6 px-5 pb-40">
                 {pageType && <PageHeader page={pageType} />}
                 {children}
               </main>
