@@ -4,6 +4,15 @@ import { createClient } from './client'
 import type { AppData, Account, Movement, Goal, Reminder, AssistantMessage, UserProfile } from '@/lib/types'
 import { emptyAppData, CURRENT_DATA_VERSION } from '@/lib/types'
 
+// ---- Persistence mutex (prevents concurrent full saves) --------------------
+
+let _saveQueue: Promise<void> = Promise.resolve()
+
+function serialized<T>(fn: () => Promise<T>): Promise<T> {
+  _saveQueue = _saveQueue.then(fn, fn)
+  return _saveQueue
+}
+
 /**
  * Supabase-backed storage for Nova Finanzas AI.
  *
@@ -519,21 +528,51 @@ export const supabaseStorage = {
   },
 
   async save(userId: string, data: AppData): Promise<void> {
-    const errors: string[] = []
+    return serialized(async () => {
+      const errors: string[] = []
+      await Promise.all([
+        upsertProfile(userId, data.profile).catch((e) => errors.push(`profile: ${e.message}`)),
+        upsertAccounts(userId, data.accounts).catch((e) => errors.push(`accounts: ${e.message}`)),
+        upsertMovements(userId, data.movements).catch((e) => errors.push(`movements: ${e.message}`)),
+        upsertGoals(userId, data.goals).catch((e) => errors.push(`goals: ${e.message}`)),
+        upsertReminders(userId, data.reminders).catch((e) => errors.push(`reminders: ${e.message}`)),
+        upsertAssistantMessages(userId, data.assistantHistory).catch((e) => errors.push(`assistant: ${e.message}`)),
+        upsertRecoveryPlans(userId, data.recoveryPlans).catch((e) => errors.push(`recovery_plans: ${e.message}`)),
+      ])
+      if (errors.length > 0) {
+        console.warn('[supabaseStorage] Partial save errors:', errors.join('; '))
+      }
+    })
+  },
 
-    await Promise.all([
-      upsertProfile(userId, data.profile).catch((e) => errors.push(`profile: ${e.message}`)),
-      upsertAccounts(userId, data.accounts).catch((e) => errors.push(`accounts: ${e.message}`)),
-      upsertMovements(userId, data.movements).catch((e) => errors.push(`movements: ${e.message}`)),
-      upsertGoals(userId, data.goals).catch((e) => errors.push(`goals: ${e.message}`)),
-      upsertReminders(userId, data.reminders).catch((e) => errors.push(`reminders: ${e.message}`)),
-      upsertAssistantMessages(userId, data.assistantHistory).catch((e) => errors.push(`assistant: ${e.message}`)),
-      upsertRecoveryPlans(userId, data.recoveryPlans).catch((e) => errors.push(`recovery_plans: ${e.message}`)),
-    ])
+  // Entity-specific saves (avoid full data dump on every change)
+  async saveProfile(userId: string, profile: UserProfile | null): Promise<void> {
+    return serialized(() => upsertProfile(userId, profile))
+  },
 
-    if (errors.length > 0) {
-      console.warn('[supabaseStorage] Partial save errors:', errors.join('; '))
-    }
+  async saveAccount(userId: string, account: Account): Promise<void> {
+    const supabase = createClient()
+    await supabase.from('accounts').upsert(toAccountRow(userId, account), { onConflict: 'id' })
+  },
+
+  async saveMovement(userId: string, movement: Movement): Promise<void> {
+    const supabase = createClient()
+    await supabase.from('movements').upsert(toMovementRow(userId, movement), { onConflict: 'id' })
+  },
+
+  async saveGoal(userId: string, goal: Goal): Promise<void> {
+    const supabase = createClient()
+    await supabase.from('goals').upsert(toGoalRow(userId, goal), { onConflict: 'id' })
+  },
+
+  async saveReminder(userId: string, reminder: Reminder): Promise<void> {
+    const supabase = createClient()
+    await supabase.from('reminders').upsert(toReminderRow(userId, reminder), { onConflict: 'id' })
+  },
+
+  async saveRecoveryPlan(userId: string, plan: RecoveryPlan): Promise<void> {
+    const supabase = createClient()
+    await supabase.from('recovery_plans').upsert(toRecoveryPlanRow(userId, plan), { onConflict: 'id' })
   },
 
   async clear(userId: string): Promise<void> {

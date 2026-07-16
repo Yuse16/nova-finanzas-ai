@@ -22,133 +22,150 @@ import { supabaseStorage } from './supabase/storage'
 import { computeStabilitySnapshot } from './stability-engine'
 import { generateRecoveryPlan, shouldRecalculate, type TriggerEvent } from './recovery-engine'
 
-// ---- Balance side-effects -------------------------------------------------
+// ---- Constants -------------------------------------------------------------
 
-/** Apply a movement's effect to account balances. */
+const MAX_RECOVERY_PLANS = 20
+const MAX_ASSISTANT_HISTORY = 100
+const PERSIST_DEBOUNCE_MS = 750
+
+// ---- Balance side-effects ---------------------------------------------------
+
 function applyMovement(accounts: Account[], m: Movement, sign = 1): Account[] {
   return accounts.map((acc) => {
     let balance = acc.balance
     const isLiability = getAccountTypeMeta(acc.type).liability
-
-    // For liability accounts, the effect on the balance is inverted.
-    // E.g., 'gasto' on a credit card (liability) increases the negative balance.
     const factor = isLiability ? -1 : 1
 
     if (m.type === 'transferencia') {
-      if (acc.id === m.accountId) balance -= sign * m.amount * factor // Money leaves this account
-      if (acc.id === m.toAccountId) balance += sign * m.amount * factor // Money enters this account
+      if (acc.id === m.accountId) balance -= sign * m.amount * factor
+      if (acc.id === m.toAccountId) balance += sign * m.amount * factor
       return { ...acc, balance, updatedAt: Date.now() }
     }
 
-    // Handle specific cases for 'deuda' and 'prestamo' in relation to liability accounts
-    if (m.type === 'deuda') { // When YOU borrow money (income/liability increase)
-      // If the movement is to accountId (where the money is received)
-      if (acc.id === m.accountId) {
-        balance += sign * m.amount * factor
-      }
-      // If the account is a 'deudas' type (tracking total money owed by YOU)
-      // This means the total debt increases (becomes more negative)
-      if (acc.type === 'deudas') {
-        balance += sign * m.amount * factor // Adjusts liability balance (e.g., -100 to -200 for new debt)
-      }
-    return { ...acc, balance, updatedAt: Date.now() }
-}
-
-    if (m.type === 'prestamo') { // When YOU lend money (expense/asset decrease)
-      // Money leaves the account
-      if (acc.id === m.accountId) {
-        balance -= sign * m.amount * factor
-      }
-      // If the account tracks loans you've given (an asset account type, if implemented)
-      // For now, it mostly impacts the source account.
-      // If acc.type === 'prestamos_otorgados' (Hypothetical asset account for loans given)
-      // then: balance += sign * m.amount * factor
+    if (m.type === 'deuda') {
+      if (acc.id === m.accountId) balance += sign * m.amount * factor
+      if (acc.type === 'deudas') balance += sign * m.amount * factor
       return { ...acc, balance, updatedAt: Date.now() }
     }
 
-    // Default handling for 'gasto' and 'ingreso'
+    if (m.type === 'prestamo') {
+      if (acc.id === m.accountId) balance -= sign * m.amount * factor
+      return { ...acc, balance, updatedAt: Date.now() }
+    }
+
     if (acc.id !== m.accountId) return acc
 
-    if (m.type === 'gasto') {
-      balance -= sign * m.amount * factor
-    } else if (m.type === 'ingreso') {
-      balance += sign * m.amount * factor
-    }
+    if (m.type === 'gasto') balance -= sign * m.amount * factor
+    else if (m.type === 'ingreso') balance += sign * m.amount * factor
 
     return { ...acc, balance, updatedAt: Date.now() }
   })
 }
+
+// ---- Module-level cache & guards -------------------------------------------
+
+let _cachedSnapshot: StabilitySnapshot | null = null
+let _prevSnapshotForTrigger: StabilitySnapshot | null = null
+let _processedFingerprints = new Set<string>()
+let _isPersisting = false
+let _persistTimer: ReturnType<typeof setTimeout> | null = null
+
+export function getCachedSnapshot(): StabilitySnapshot | null {
+  return _cachedSnapshot
+}
+
+function computeFingerprint(
+  userId: string,
+  trigger: TriggerEvent,
+  snapshot: StabilitySnapshot,
+): string {
+  return [
+    userId,
+    trigger,
+    snapshot.confirmedIncome,
+    snapshot.weeklyFlow,
+    snapshot.totalDebt,
+    snapshot.overduePayments,
+    snapshot.upcomingCommitments,
+  ].join('|')
+}
+
+function limitRecoveryPlans(plans: RecoveryPlan[]): RecoveryPlan[] {
+  const sorted = [...plans].sort((a, b) => b.lastRecalculatedAt - a.lastRecalculatedAt)
+  const activeIdx = sorted.findIndex((p) => p.status === 'active')
+
+  // Ensure only one active plan
+  if (activeIdx !== -1) {
+    for (let i = 0; i < sorted.length; i++) {
+      if (i !== activeIdx && sorted[i].status === 'active') {
+        sorted[i] = { ...sorted[i], status: 'superseded' }
+      }
+    }
+  }
+
+  // Keep only the top MAX_RECOVERY_PLANS
+  return sorted.slice(0, MAX_RECOVERY_PLANS)
+}
+
+// ---- Store type ------------------------------------------------------------
 
 export type StoreValue = {
   data: AppData
   ready: boolean
   userId: string | null
   setUserData: (userId: string | null) => Promise<void>
-  // account helpers
   addAccount: (input: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>) => void
   updateAccount: (account: Account) => void
   deleteAccount: (id: string) => void
-  // movement helpers
   addMovement: (input: Omit<Movement, 'id' | 'createdAt'>) => void
   updateMovement: (next: Movement) => void
   deleteMovement: (movement: Movement) => void
-  // goal helpers
   addGoal: (input: Omit<Goal, 'id' | 'createdAt'>) => void
   updateGoal: (goal: Goal) => void
   deleteGoal: (id: string) => void
   addToGoal: (id: string, amount: number) => void
-  // reminder helpers
   addReminder: (input: Omit<Reminder, 'id' | 'createdAt'>) => void
   updateReminder: (reminder: Reminder) => void
   deleteReminder: (id: string) => void
   toggleReminder: (id: string) => void
-  // onboarding
   completeOnboarding: (profile: UserProfile, accounts: Account[]) => void
   reset: () => void
   resetWithSnapshot: (snapshot: FinancialSnapshot) => void
-  // NEW: Assistant History
-  addAssistantMessage: (message: Omit<AssistantMessage, 'id' | 'createdAt'>) => void;
-  updateSelectedFont: (font: string) => void;
-  updateProfile: (updates: Partial<UserProfile>) => void;
-  // recovery plans
+  addAssistantMessage: (message: Omit<AssistantMessage, 'id' | 'createdAt'>) => void
+  updateSelectedFont: (font: string) => void
+  updateProfile: (updates: Partial<UserProfile>) => void
   setRecoveryPlans: (plans: RecoveryPlan[]) => void
   generateRecoveryPlanAction: (trigger?: TriggerEvent | null) => void
 }
 
-// Cache for the latest stability snapshot (not stored in Zustand to avoid subscribe loops)
-let _cachedSnapshot: StabilitySnapshot | null = null
-let _prevSnapshotForTrigger: StabilitySnapshot | null = null
-
-export function getCachedSnapshot(): StabilitySnapshot | null {
-  return _cachedSnapshot
-}
+// ---- Store creation --------------------------------------------------------
 
 export const useStore = create<StoreValue>((set, get) => ({
   data: emptyAppData(),
   ready: false,
   userId: null,
-  latestSnapshot: null,
 
   setUserData: async (userId) => {
     if (!userId) {
       set({ userId })
       return
     }
-
-    // Mark as not-ready to prevent the subscriber from writing stale
-    // offline data to Supabase while the remote load is in flight.
     set({ userId, ready: false })
 
     if (typeof navigator !== 'undefined' && navigator.onLine) {
       const remote = await supabaseStorage.load(userId).catch(() => null)
       if (remote) {
-        set({ data: remote, ready: true })
-        storage.save(remote)
+        const sanitized = {
+          ...remote,
+          recoveryPlans: limitRecoveryPlans(remote.recoveryPlans),
+          assistantHistory: remote.assistantHistory.slice(0, MAX_ASSISTANT_HISTORY),
+        }
+        set({ data: sanitized, ready: true })
+        storage.save(sanitized)
         return
       }
     }
 
-    // Fallback: keep IndexedDB data (already loaded by auto-hydrate)
     set({ ready: true })
   },
 
@@ -161,13 +178,9 @@ export const useStore = create<StoreValue>((set, get) => ({
         updatedAt: Date.now(),
       }
       return {
-        data: {
-          ...state.data,
-          accounts: [...state.data.accounts, newAccount],
-        },
+        data: { ...state.data, accounts: [...state.data.accounts, newAccount] },
       }
-    });
-    // Triggers save via subscriber
+    })
   },
 
   updateAccount: (account) => {
@@ -248,10 +261,7 @@ export const useStore = create<StoreValue>((set, get) => ({
         createdAt: Date.now(),
       }
       return {
-        data: {
-          ...state.data,
-          goals: [...state.data.goals, newGoal],
-        },
+        data: { ...state.data, goals: [...state.data.goals, newGoal] },
       }
     })
   },
@@ -299,10 +309,7 @@ export const useStore = create<StoreValue>((set, get) => ({
         createdAt: Date.now(),
       }
       return {
-        data: {
-          ...state.data,
-          reminders: [...state.data.reminders, newReminder],
-        },
+        data: { ...state.data, reminders: [...state.data.reminders, newReminder] },
       }
     })
   },
@@ -344,11 +351,7 @@ export const useStore = create<StoreValue>((set, get) => ({
 
   completeOnboarding: (profile, accounts) => {
     set((state) => ({
-      data: {
-        ...state.data,
-        profile,
-        accounts,
-      },
+      data: { ...state.data, profile, accounts },
     }))
   },
 
@@ -388,7 +391,7 @@ export const useStore = create<StoreValue>((set, get) => ({
 
   setRecoveryPlans: (plans) => {
     set((state) => ({
-      data: { ...state.data, recoveryPlans: plans },
+      data: { ...state.data, recoveryPlans: limitRecoveryPlans(plans) },
     }))
   },
 
@@ -409,46 +412,73 @@ export const useStore = create<StoreValue>((set, get) => ({
       trigger ?? null,
     )
 
-    const plans = [newPlan, ...data.recoveryPlans]
+    const plans = limitRecoveryPlans([newPlan, ...data.recoveryPlans])
     set({ data: { ...data, recoveryPlans: plans } })
   },
 
-  // NEW: Assistant History Actions
   addAssistantMessage: (message) => {
     set((state) => ({
       data: {
         ...state.data,
-        assistantHistory: [{
-          ...message,
-          id: uid('asm'),
-          createdAt: Date.now()
-        }, ...state.data.assistantHistory],
+        assistantHistory: [
+          {
+            ...message,
+            id: uid('asm'),
+            createdAt: Date.now(),
+          },
+          ...state.data.assistantHistory,
+        ].slice(0, MAX_ASSISTANT_HISTORY),
       },
-    }));
+    }))
   },
 }))
 
-// Auto-hydrate from storage on client side
+// ---- Debounced persistence -------------------------------------------------
+
+function schedulePersist(state: StoreValue) {
+  if (_persistTimer) clearTimeout(_persistTimer)
+  _persistTimer = setTimeout(async () => {
+    if (_isPersisting) return
+    _isPersisting = true
+    try {
+      const current = useStore.getState()
+      if (!current.ready) return
+
+      // Local persist (IndexedDB + localStorage)
+      storage.save(current.data).catch(() => {})
+
+      // Remote persist (Supabase) — only if authenticated
+      if (current.userId) {
+        await supabaseStorage.save(current.userId, current.data)
+      }
+    } finally {
+      _isPersisting = false
+    }
+  }, PERSIST_DEBOUNCE_MS)
+}
+
+// ---- Auto-hydrate + subscribe ----------------------------------------------
+
 if (typeof window !== 'undefined') {
   storage.load().then((loaded) => {
-    useStore.setState({ data: loaded, ready: true })
+    const sanitized = {
+      ...loaded,
+      recoveryPlans: limitRecoveryPlans(loaded.recoveryPlans),
+      assistantHistory: loaded.assistantHistory.slice(0, MAX_ASSISTANT_HISTORY),
+    }
+    useStore.setState({ data: sanitized, ready: true })
   })
 
-  // Subscribe to updates and save to both IndexedDB and Supabase
+  // Subscribe to changes — each concern is isolated to prevent reentrancy
   useStore.subscribe((state) => {
     if (!state.ready) return
 
-    // Always save to IndexedDB (offline cache)
-    storage.save(state.data)
+    // 1. Cancel any pending schedule and re-schedule (debounced)
+    schedulePersist(state)
 
-    // Fire-and-forget save to Supabase when user is authenticated
-    if (state.userId) {
-      supabaseStorage.save(state.userId, state.data)
-    }
-
-    // Compute, persist, and cache stability snapshot
+    // 2. Compute stability snapshot (pure, no state mutation)
     if (state.userId && state.data.accounts.length > 0) {
-      _cachedSnapshot = computeStabilitySnapshot(
+      const newSnapshot = computeStabilitySnapshot(
         state.data.accounts,
         state.data.movements,
         state.data.reminders,
@@ -456,33 +486,41 @@ if (typeof window !== 'undefined') {
         state.data.profile?.reservedMoney ?? 0,
         state.data.profile?.emergencyMargin ?? 0,
       )
-      supabaseStorage.saveSnapshot(_cachedSnapshot)
 
-      // Auto-recalculate recovery plan on trigger events
+      // Persist snapshot to Supabase
+      supabaseStorage.saveSnapshot(newSnapshot).catch(() => {})
+
+      // Detect trigger and optionally generate recovery plan
       if (_prevSnapshotForTrigger) {
-        const trigger = shouldRecalculate(_prevSnapshotForTrigger, _cachedSnapshot)
+        const trigger = shouldRecalculate(_prevSnapshotForTrigger, newSnapshot)
         if (trigger) {
-          const activePlan = state.data.recoveryPlans.find((p) => p.status === 'active') ?? null
-          const newPlan = generateRecoveryPlan(
-            state.data.accounts,
-            state.data.movements,
-            state.data.reminders,
-            state.data.goals,
-            _cachedSnapshot,
-            activePlan,
-            trigger,
-          )
-          const plans = [newPlan, ...state.data.recoveryPlans]
-          useStore.setState({ data: { ...state.data, recoveryPlans: plans } })
+          const fp = computeFingerprint(state.userId, trigger, newSnapshot)
+          if (!_processedFingerprints.has(fp)) {
+            _processedFingerprints.add(fp)
+
+            const activePlan = state.data.recoveryPlans.find((p) => p.status === 'active') ?? null
+            const newPlan = generateRecoveryPlan(
+              state.data.accounts,
+              state.data.movements,
+              state.data.reminders,
+              state.data.goals,
+              newSnapshot,
+              activePlan,
+              trigger,
+            )
+            const plans = limitRecoveryPlans([newPlan, ...state.data.recoveryPlans])
+            useStore.setState({ data: { ...state.data, recoveryPlans: plans } })
+          }
         }
       }
-      _prevSnapshotForTrigger = _cachedSnapshot
+
+      // Update snapshot cache AFTER all trigger evaluation to prevent reentrancy
+      _cachedSnapshot = newSnapshot
+      _prevSnapshotForTrigger = newSnapshot
     }
   })
 }
 
-// Dummy provider for compatibility (not needed for Zustand but keeps imports safe)
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
-

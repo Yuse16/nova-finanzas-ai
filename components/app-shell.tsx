@@ -43,7 +43,15 @@ function getPageType(pathname: string): PageType | null {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { data, ready } = useStore()
+  const ready = useStore((s) => s.ready)
+  const profile = useStore((s) => s.data.profile)
+  const accounts = useStore((s) => s.data.accounts)
+  const movements = useStore((s) => s.data.movements)
+  const goals = useStore((s) => s.data.goals)
+  const reminders = useStore((s) => s.data.reminders)
+  const assistantHistory = useStore((s) => s.data.assistantHistory)
+  const recoveryPlans = useStore((s) => s.data.recoveryPlans)
+
   const { voiceOpen, closeVoice, theme, setTheme, showFullSummary } = useUI()
   const pathname = usePathname()
   const pageType = getPageType(pathname)
@@ -63,12 +71,24 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Regenerate notifications on mount and when financial data changes
+  // Regenerate notifications on mount and when financial data changes (debounced)
   useEffect(() => {
     if (!ready) return
-    const notifs = generateNotifications(data)
-    saveNotifications(notifs)
-  }, [data, ready])
+    const timer = setTimeout(() => {
+      const notifs = generateNotifications({
+        profile,
+        accounts,
+        movements,
+        goals,
+        reminders,
+        assistantHistory,
+        recoveryPlans,
+        version: 2,
+      } as AppData)
+      saveNotifications(notifs)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [ready, accounts, movements, reminders, goals, profile])
 
   if (pathname.startsWith('/auth')) {
     return <>{children}</>
@@ -83,9 +103,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const needsOnboarding =
-    !data.profile ||
-    !data.profile.onboarded ||
-    (data.accounts.length === 0 && !data.profile.accountsSkipped)
+    !profile ||
+    !profile.onboarded ||
+    (accounts.length === 0 && !profile.accountsSkipped)
   if (needsOnboarding) {
     return <Onboarding />
   }
