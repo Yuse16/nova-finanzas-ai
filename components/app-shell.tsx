@@ -11,6 +11,7 @@ import { VoiceExperience } from './voice-experience'
 import { Onboarding } from './onboarding'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
+import type { AppData } from '@/lib/types'
 import { ThemeCustomizationProvider } from '@/context/ThemeCustomizationContext'
 import { PageHeader } from './page-header'
 import type { PageType } from './page-header'
@@ -113,8 +114,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <ThemeCustomizationProvider>
       <div
-        className="relative overflow-x-hidden bg-gray-50 dark:bg-gray-950"
-        style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', minHeight: '100dvh' }}
+        className="relative overflow-x-hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', minHeight: '100dvh' }}
       >
         <AnimatePresence mode="wait">
           {!showFullSummary ? (
@@ -126,7 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               exit={{ opacity: 0, filter: 'blur(6px)' }}
               transition={{ duration: 0.3, ease: [0.33, 1, 0.68, 1] }}
             >
-              <main className="mx-auto flex w-full max-w-lg flex-col gap-6 px-5 pb-40 pt-6">
+              <main className={`mx-auto flex w-full max-w-lg flex-col gap-6 px-5 pb-40 ${pathname === '/' ? 'pt-0' : 'pt-[calc(env(safe-area-inset-top)+1.5rem)]'}`}>
                 {pageType && <PageHeader page={pageType} />}
                 {children}
               </main>

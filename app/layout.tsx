@@ -29,10 +29,10 @@ export const metadata: Metadata = {
   description:
     'Tu centro de control financiero personal con inteligencia artificial. Registra gastos por voz, controla tus cuentas y alcanza tus metas.',
   generator: 'v0.app',
-  manifest: '/manifest.json?v=4',
+  manifest: '/manifest.json?v=5',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'MPUME Finanzas',
   },
   icons: [
@@ -52,7 +52,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light dark',
-  themeColor: '#ffffff',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#cfe3fa' },
+    { media: '(prefers-color-scheme: dark)', color: '#071225' },
+  ],
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -77,7 +80,7 @@ export default function RootLayout({
   return (
     // Aplicar las clases de fuente generadas directamente al html
     <html lang="es" className={fontClasses}>
-      <body className="font-system antialiased bg-gray-50 dark:bg-gray-950">
+      <body className="font-system antialiased">
         <AuthProvider>
           <UIProvider>
             <AppShell>

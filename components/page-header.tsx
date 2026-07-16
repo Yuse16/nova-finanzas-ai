@@ -43,13 +43,7 @@ export function PageHeader({ page }: { page: PageType }) {
     .reduce((sum, acc) => sum + acc.balance, 0)
 
   return (
-    <section
-        className="relative w-screen overflow-hidden shrink-0 left-1/2 -translate-x-1/2"
-        style={{
-          height: 'calc(280px + env(safe-area-inset-top, 0px))',
-          marginTop: 'calc(-1.5rem - env(safe-area-inset-top, 0px))',
-        }}
-      >
+    <section className="relative w-screen overflow-hidden shrink-0 left-1/2 -translate-x-1/2 h-[44vh] min-h-[340px]">
       <div className="absolute inset-0">
         <Image
           src={theme === 'dark' ? '/montanaobs.webp' : '/montanav2.webp'}
@@ -73,7 +67,7 @@ export function PageHeader({ page }: { page: PageType }) {
         }}
       />
 
-      <div className="absolute right-5 flex items-center gap-2" style={{ top: 'calc(12px + env(safe-area-inset-top, 0px))' }}>
+      <div className="absolute right-5 flex items-center gap-2" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}>
         <div className="relative">
           <button
             type="button"

@@ -88,7 +88,7 @@ export function HomeHero({
   }
 
   return (
-    <section className="relative h-[40vh] min-h-[280px] w-screen overflow-hidden -mt-6 left-1/2 -translate-x-1/2">
+    <section className="relative h-[44vh] min-h-[340px] w-screen overflow-hidden left-1/2 -translate-x-1/2">
       <div className="absolute inset-0">
         <Image
           src={theme === 'dark' ? '/montanaobs.webp' : '/montanav2.webp'}
@@ -112,7 +112,7 @@ export function HomeHero({
         }}
       />
 
-      <div className="absolute right-5 top-9 z-10">
+      <div className="absolute right-5 z-10" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}>
         <button
           type="button"
           aria-label="Notificaciones"
