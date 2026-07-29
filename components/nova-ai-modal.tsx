@@ -536,7 +536,7 @@ export function NovaAIModal() {
                   <Sparkles className="size-5 text-white" />
                 </span>
                 <div>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">Hola Jorge 👋</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">Hola {data.profile?.name ?? 'Usuario'} 👋</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Nova AI — Tu asistente financiero inteligente</p>
                   {isOffline && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full mt-0.5">

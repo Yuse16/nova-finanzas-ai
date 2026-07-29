@@ -53,6 +53,13 @@ export function saveGuestState(state: GuestState): void {
 }
 
 export function enableGuestMode(): GuestState {
+  const existing = loadGuestState()
+  if (existing.mode === 'guest' && existing.guestId) {
+    if (typeof document !== 'undefined') {
+      document.cookie = serializeCookie(existing.guestId)
+    }
+    return existing
+  }
   const state: GuestState = {
     mode: 'guest',
     guestId: generateId(),

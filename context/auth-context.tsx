@@ -4,9 +4,12 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import type { Session, User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/lib/store'
-import { loadGuestState, enableGuestMode, disableGuestMode, completeGuestOnboarding, isGuest as checkIsGuest, type GuestState } from '@/lib/guest-storage'
+import { loadGuestState, enableGuestMode, disableGuestMode, completeGuestOnboarding, type GuestState } from '@/lib/guest-storage'
+
+type AuthMode = 'loading' | 'anonymous' | 'guest' | 'authenticated'
 
 type AuthContextValue = {
+  authMode: AuthMode
   user: User | null
   session: Session | null
   loading: boolean
@@ -24,13 +27,14 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [authMode, setAuthMode] = useState<AuthMode>('loading')
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [guestState, setGuestState] = useState<GuestState>(() => loadGuestState())
   const supabase = createClient()
 
-  const [isGuest, setIsGuest] = useState(false)
-  const [guestState, setGuestState] = useState<GuestState>(() => loadGuestState())
+  const user = session?.user ?? null
+  const loading = authMode === 'loading'
+  const isGuest = authMode === 'guest'
 
   const detectStandalone = () =>
     typeof window !== 'undefined' &&
@@ -47,19 +51,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function init() {
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
-      setUser(session?.user ?? null)
-      setIsGuest(!session && checkIsGuest())
 
       const gs = loadGuestState()
       setGuestState(gs)
 
       if (session?.user?.id) {
+        setAuthMode('authenticated')
         useStore.getState().setUserData(session.user.id)
-      } else if (gs.mode === 'guest') {
+      } else if (gs.mode === 'guest' && gs.guestId) {
+        setAuthMode('guest')
         useStore.getState().setUserData(null)
+      } else {
+        setAuthMode('anonymous')
       }
-
-      setLoading(false)
     }
     init()
 
@@ -72,26 +76,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session ? `usuario ${session.user.email}` : 'sin sesión',
       )
       setSession(session)
-      setUser(session?.user ?? null)
 
       const gs = loadGuestState()
-      const wasGuest = gs.mode === 'guest'
 
       if (session?.user?.id) {
-        // Transition: guest → authenticated
-        if (wasGuest) {
+        if (gs.mode === 'guest') {
           disableGuestMode()
         }
-        setIsGuest(false)
         setGuestState({ mode: 'none', guestId: '', createdAt: 0, onboardingCompleted: false })
+        setAuthMode('authenticated')
         useStore.getState().setUserData(session.user.id)
       } else {
-        setIsGuest(false)
-        setGuestState(loadGuestState())
+        const newGs = loadGuestState()
+        setGuestState(newGs)
+        setAuthMode(newGs.mode === 'guest' && newGs.guestId ? 'guest' : 'anonymous')
         useStore.getState().setUserData(null)
       }
-
-      setLoading(false)
     })
 
     return () => {
@@ -131,28 +131,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    setIsGuest(false)
-    setGuestState(loadGuestState())
+    const gs = loadGuestState()
+    setGuestState(gs)
+    setAuthMode(gs.mode === 'guest' && gs.guestId ? 'guest' : 'anonymous')
     useStore.getState().setUserData(null)
   }
 
   const handleEnableGuestMode = useCallback(() => {
     const gs = enableGuestMode()
     setGuestState(gs)
-    setIsGuest(true)
+    setAuthMode('guest')
     useStore.getState().setUserData(null)
   }, [])
 
   const handleExitGuestMode = useCallback(() => {
     disableGuestMode()
     setGuestState({ mode: 'none', guestId: '', createdAt: 0, onboardingCompleted: false })
-    setIsGuest(false)
+    setAuthMode('anonymous')
     useStore.getState().setUserData(null)
   }, [])
 
   return (
     <AuthContext.Provider
       value={{
+        authMode,
         user,
         session,
         loading,

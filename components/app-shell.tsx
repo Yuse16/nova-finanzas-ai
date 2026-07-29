@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const recoveryPlans = useStore((s) => s.data.recoveryPlans)
 
   const { voiceOpen, closeVoice, theme, setTheme, showFullSummary } = useUI()
-  const { user, isGuest, guestState } = useAuth()
+  const { user, isGuest, guestState, loading: authLoading } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
   const pageType = getPageType(pathname)
@@ -70,10 +70,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (pathname.startsWith('/auth')) return
     if (!ready) return
+    if (authLoading) return
     if (!user && !isGuest) {
       router.replace('/auth/login')
     }
-  }, [ready, user, isGuest, pathname, router])
+  }, [ready, user, isGuest, authLoading, pathname, router])
 
   // Detect guest → authenticated transition and show migration modal
   useEffect(() => {
@@ -134,7 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return <>{children}</>
   }
 
-  if (!ready) {
+  if (!ready || authLoading) {
     return (
       <div className="grid min-h-screen place-items-center bg-background text-foreground">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-white" />

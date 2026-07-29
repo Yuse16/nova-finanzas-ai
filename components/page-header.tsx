@@ -96,7 +96,11 @@ export function PageHeader({ page }: { page: PageType }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { exitGuestMode() }}
+                      onClick={() => {
+                        if (window.confirm('¿Estás seguro de que quieres salir del modo invitado? Los datos no sincronizados se perderán.')) {
+                          exitGuestMode()
+                        }
+                      }}
                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                     >
                       <LogOut className="size-4" />
