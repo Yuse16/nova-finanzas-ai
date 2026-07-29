@@ -1,19 +1,24 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/lib/store'
+import { loadGuestState, enableGuestMode, disableGuestMode, completeGuestOnboarding, isGuest as checkIsGuest, type GuestState } from '@/lib/guest-storage'
 
 type AuthContextValue = {
   user: User | null
   session: Session | null
   loading: boolean
   isStandalone: boolean
+  isGuest: boolean
+  guestState: GuestState
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (email: string, password: string) => Promise<{ error: string | null; user: User | null }>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
+  enableGuestMode: () => void
+  exitGuestMode: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -23,6 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+
+  const [isGuest, setIsGuest] = useState(false)
+  const [guestState, setGuestState] = useState<GuestState>(() => loadGuestState())
 
   const detectStandalone = () =>
     typeof window !== 'undefined' &&
@@ -40,7 +48,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
       setUser(session?.user ?? null)
-      useStore.getState().setUserData(session?.user?.id ?? null)
+      setIsGuest(!session && checkIsGuest())
+
+      const gs = loadGuestState()
+      setGuestState(gs)
+
+      if (session?.user?.id) {
+        useStore.getState().setUserData(session.user.id)
+      } else if (gs.mode === 'guest') {
+        useStore.getState().setUserData(null)
+      }
+
       setLoading(false)
     }
     init()
@@ -55,7 +73,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       )
       setSession(session)
       setUser(session?.user ?? null)
-      useStore.getState().setUserData(session?.user?.id ?? null)
+
+      const gs = loadGuestState()
+      const wasGuest = gs.mode === 'guest'
+
+      if (session?.user?.id) {
+        // Transition: guest → authenticated
+        if (wasGuest) {
+          disableGuestMode()
+        }
+        setIsGuest(false)
+        setGuestState({ mode: 'none', guestId: '', createdAt: 0, onboardingCompleted: false })
+        useStore.getState().setUserData(session.user.id)
+      } else {
+        setIsGuest(false)
+        setGuestState(loadGuestState())
+        useStore.getState().setUserData(null)
+      }
+
       setLoading(false)
     })
 
@@ -96,10 +131,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    setIsGuest(false)
+    setGuestState(loadGuestState())
+    useStore.getState().setUserData(null)
   }
 
+  const handleEnableGuestMode = useCallback(() => {
+    const gs = enableGuestMode()
+    setGuestState(gs)
+    setIsGuest(true)
+    useStore.getState().setUserData(null)
+  }, [])
+
+  const handleExitGuestMode = useCallback(() => {
+    disableGuestMode()
+    setGuestState({ mode: 'none', guestId: '', createdAt: 0, onboardingCompleted: false })
+    setIsGuest(false)
+    useStore.getState().setUserData(null)
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, isStandalone, signIn, signUp, signInWithGoogle, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        isStandalone,
+        isGuest,
+        guestState,
+        signIn,
+        signUp,
+        signInWithGoogle,
+        signOut,
+        enableGuestMode: handleEnableGuestMode,
+        exitGuestMode: handleExitGuestMode,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

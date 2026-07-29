@@ -19,7 +19,9 @@ export async function middleware(request: NextRequest) {
 
   console.log(`[MIDDLEWARE] Ruta: ${pathname}, User: ${user ? user.email : 'NO AUTENTICADO'}`)
 
-  if (!user) {
+  const isGuest = request.cookies.has('mpume_guest')
+
+  if (!user && !isGuest) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     url.searchParams.set('redirect', pathname)

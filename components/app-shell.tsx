@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, type ReactNode } from 'react'
-import { usePathname } from 'next/navigation'
+import { useEffect, useState, useRef, type ReactNode } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { FontProvider } from './font-provider'
@@ -11,10 +11,14 @@ import { VoiceExperience } from './voice-experience'
 import { Onboarding } from './onboarding'
 import { useStore } from '@/lib/store'
 import { useUI } from '@/lib/ui-context'
+import { useAuth } from '@/context/auth-context'
 import type { AppData } from '@/lib/types'
 import { ThemeCustomizationProvider } from '@/context/ThemeCustomizationContext'
 import { PageHeader } from './page-header'
 import type { PageType } from './page-header'
+import { GuestMigrationModal } from './guest-migration-modal'
+import { supabaseStorage } from '@/lib/supabase/storage'
+import { completeGuestOnboarding } from '@/lib/guest-storage'
 
 import { TransactionModal } from './transaction-modal'
 import { TransferModal } from './transfer-modal'
@@ -54,8 +58,43 @@ export function AppShell({ children }: { children: ReactNode }) {
   const recoveryPlans = useStore((s) => s.data.recoveryPlans)
 
   const { voiceOpen, closeVoice, theme, setTheme, showFullSummary } = useUI()
+  const { user, isGuest, guestState } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
   const pageType = getPageType(pathname)
+
+  const [showMigration, setShowMigration] = useState(false)
+  const migrationHandled = useRef(false)
+
+  // Auth guard: redirect to login if not authenticated and not guest
+  useEffect(() => {
+    if (pathname.startsWith('/auth')) return
+    if (!ready) return
+    if (!user && !isGuest) {
+      router.replace('/auth/login')
+    }
+  }, [ready, user, isGuest, pathname, router])
+
+  // Detect guest → authenticated transition and show migration modal
+  useEffect(() => {
+    if (!ready || !user || migrationHandled.current) return
+    const hasLocalData =
+      accounts.length > 0 ||
+      movements.length > 0 ||
+      goals.length > 0 ||
+      reminders.length > 0
+    if (hasLocalData) {
+      setShowMigration(true)
+    }
+    migrationHandled.current = true
+  }, [ready, user, accounts, movements, goals, reminders])
+
+  async function handleMigrate() {
+    const state = useStore.getState()
+    if (!user?.id || !state.userId) return
+    await supabaseStorage.save(user.id, state.data)
+    setShowMigration(false)
+  }
 
   // Scroll to top on every navigation (fixes mobile scroll jump)
   useEffect(() => {
@@ -107,8 +146,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     !profile ||
     !profile.onboarded ||
     (accounts.length === 0 && !profile.accountsSkipped)
-  if (needsOnboarding) {
-    return <Onboarding />
+
+  // Guest: skip onboarding if already completed in guest session
+  const guestOnboardingDone = isGuest && guestState.onboardingCompleted
+
+  if (needsOnboarding && !guestOnboardingDone) {
+    return <Onboarding onComplete={() => completeGuestOnboarding()} />
   }
 
   return (
@@ -165,6 +208,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         <NotificationsModal />
         <BalanceDetailModal />
         <ResetFinancialModal />
+
+        <GuestMigrationModal
+          open={showMigration}
+          onCancel={() => setShowMigration(false)}
+          onSkip={() => setShowMigration(false)}
+          onMigrate={handleMigrate}
+        />
 
         <VoiceExperience open={voiceOpen} onClose={closeVoice} />
       </div>

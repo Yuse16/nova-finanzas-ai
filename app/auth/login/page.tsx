@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const { signIn, signInWithGoogle, isStandalone } = useAuth()
+  const { signIn, signInWithGoogle, enableGuestMode, isStandalone } = useAuth()
   const router = useRouter()
 
   async function handleSubmit(e: FormEvent) {
@@ -145,6 +145,31 @@ export default function LoginPage() {
             </svg>
             {googleLoading ? 'Conectando...' : 'Continuar con Google'}
           </button>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white/90 px-2 text-gray-400 dark:bg-gray-900/90 dark:text-gray-500">
+                o
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              enableGuestMode()
+              router.push('/')
+            }}
+            className="w-full rounded-lg border border-gray-200 bg-white/50 px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-700/50"
+          >
+            Usar sin cuenta
+          </button>
+          <p className="mt-2 text-center text-[11px] text-gray-400 dark:text-gray-500">
+            Podrás crear una cuenta después y conservar tus datos.
+          </p>
 
           <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
             ¿No tienes cuenta?{' '}

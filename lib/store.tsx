@@ -147,7 +147,7 @@ export const useStore = create<StoreValue>((set, get) => ({
 
   setUserData: async (userId) => {
     if (!userId) {
-      set({ userId })
+      set({ userId, ready: true })
       return
     }
     set({ userId, ready: false })

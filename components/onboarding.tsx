@@ -51,7 +51,7 @@ function getPreviousNameFromSnapshot(): string | null {
   }
 }
 
-export function Onboarding() {
+export function Onboarding({ onComplete }: { onComplete?: () => void } = {}) {
   const { completeOnboarding } = useStore()
   const { theme, setTheme } = useUI()
   const previousName = getPreviousNameFromSnapshot()
@@ -211,6 +211,7 @@ export function Onboarding() {
       },
       accounts,
     )
+    onComplete?.()
   }
 
   return (

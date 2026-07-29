@@ -26,7 +26,7 @@ export function PageHeader({ page }: { page: PageType }) {
   const { theme, openFullSummary, open } = useUI()
   const { settings } = useCustomization()
   const { data } = useStore()
-  const { user, signOut } = useAuth()
+  const { user, signOut, isGuest, exitGuestMode } = useAuth()
   const [unread, setUnread] = useState(0)
   const [showMenu, setShowMenu] = useState(false)
 
@@ -85,14 +85,34 @@ export function PageHeader({ page }: { page: PageType }) {
                   {user?.email ?? ''}
                 </p>
                 <hr className="my-1 border-gray-200 dark:border-gray-700" />
-                <button
-                  type="button"
-                  onClick={() => { signOut() }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                >
-                  <LogOut className="size-4" />
-                  Cerrar sesión
-                </button>
+                {isGuest ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setShowMenu(false); window.location.href = '/auth/signup' }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                    >
+                      Crear cuenta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { exitGuestMode() }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                    >
+                      <LogOut className="size-4" />
+                      Salir del modo invitado
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { signOut() }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  >
+                    <LogOut className="size-4" />
+                    Cerrar sesión
+                  </button>
+                )}
               </div>
             </>
           )}
